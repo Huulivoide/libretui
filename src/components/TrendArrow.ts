@@ -6,7 +6,11 @@ import {
 } from '@opentui/core';
 import { type GlucoseReading } from 'libre-link-unofficial-api';
 import { Unit } from '../state/AppState.js';
-import { rgbaForMeasurement, TREND_ARROW_CHARS } from './theme.js';
+import {
+  rgbaForMeasurement,
+  TREND_ARROW_CHARS,
+  COLOR_DEFAULT_FG,
+} from './theme.js';
 
 export type TrendArrowComponent = {
   readonly root: BoxRenderable;
@@ -24,14 +28,14 @@ export function createTrendArrow(ctx: RenderContext): TrendArrowComponent {
   const valueText = new TextRenderable(ctx, {
     id: 'trend-arrow-value',
     content: '---',
-    fg: '#c0caf5',
+    fg: COLOR_DEFAULT_FG,
     attributes: TextAttributes.BOLD,
   });
 
   const arrowText = new TextRenderable(ctx, {
     id: 'trend-arrow-icon',
     content: '?',
-    fg: '#c0caf5',
+    fg: COLOR_DEFAULT_FG,
   });
 
   root.add(valueText);
