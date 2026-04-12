@@ -28,4 +28,19 @@ bun test           # Run tests
 
 All source files use **ESM** (`import`/`export`). No `require()`.
 
+## Code Style Conventions
+
+These are enforced by ESLint where possible and must be followed everywhere:
+
+- **`type` over `interface`** — always use `type` for type definitions, never `interface`.
+- **`readonly` by default** — all properties on types/objects should be `readonly` unless mutation is explicitly required.
+- **`Array<T>` / `ReadonlyArray<T>`** — never use `T[]` or `readonly T[]` shorthand notation.
+- **Always brace `if` blocks** — every `if`/`else`/`for`/`while` body must use `{}`, even single-line ones.
+- **String enum values match key names** — e.g. `Login = 'Login'`, not `Login = 'login'`.
+- **Use library getters for BG values** — `GlucoseReading.value` (mg/dL) and `GlucoseReading.mmol` (mmol/L) are available directly; don't write custom conversion utilities.
+
+## PR Convention
+
+Every PR description must include a **"Prompts used"** section briefly summarising the user prompts that drove the work in that PR.
+
 > This file should be updated as the project architecture is implemented.
