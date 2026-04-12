@@ -1,4 +1,8 @@
-import { BoxRenderable, TextRenderable, type RenderContext } from '@opentui/core';
+import {
+  BoxRenderable,
+  TextRenderable,
+  type RenderContext,
+} from '@opentui/core';
 import { Screen } from '../state/AppState.js';
 import {
   COLOR_TAB_ACTIVE_BG,
@@ -59,7 +63,9 @@ export function createNavBar(ctx: RenderContext): NavBarComponent {
   const setActive = (screen: Screen): void => {
     for (const tab of tabs) {
       const isActive = tab.screen === screen;
-      tab.box.backgroundColor = isActive ? COLOR_TAB_ACTIVE_BG : COLOR_TAB_INACTIVE_BG;
+      tab.box.backgroundColor = isActive
+        ? COLOR_TAB_ACTIVE_BG
+        : COLOR_TAB_INACTIVE_BG;
       tab.label.fg = isActive ? COLOR_TAB_ACTIVE_FG : COLOR_TAB_INACTIVE_FG;
     }
   };

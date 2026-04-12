@@ -69,7 +69,13 @@ type PlotBounds = {
 function drawAxes(fb: FrameBuffer, bounds: PlotBounds): void {
   const { plotW, axisRow } = bounds;
   for (let row = MARGIN_TOP; row <= axisRow; row++) {
-    fb.setCell(MARGIN_LEFT - 1, row, row === axisRow ? '└' : '│', COLOR_AXIS, COLOR_BG);
+    fb.setCell(
+      MARGIN_LEFT - 1,
+      row,
+      row === axisRow ? '└' : '│',
+      COLOR_AXIS,
+      COLOR_BG,
+    );
   }
   for (let col = MARGIN_LEFT; col < MARGIN_LEFT + plotW; col++) {
     fb.setCell(col, axisRow, '─', COLOR_AXIS, COLOR_BG);
@@ -129,7 +135,9 @@ function drawDataLine(
   for (const reading of readings) {
     const x = toXCol(reading.timestamp.getTime(), timeMin, timeMax, plotW);
     const y = toYRow(reading.value, valMin, valMax, plotH);
-    const dotColor = MEASUREMENT_COLOR_MAP[reading.measurementColor] ?? MEASUREMENT_COLOR_MAP[1];
+    const dotColor =
+      MEASUREMENT_COLOR_MAP[reading.measurementColor] ??
+      MEASUREMENT_COLOR_MAP[1];
 
     if (prevX !== null && prevY !== null && (x !== prevX || y !== prevY)) {
       const dx = x - prevX;
@@ -214,7 +222,14 @@ function drawCurrentValueLabel(
   const currentLabel =
     settings.unit === Unit.MmolL ? lastReading.mmol : String(lastReading.mgDl);
   const labelX = Math.max(0, width - currentLabel.length - MARGIN_RIGHT);
-  fb.drawText(currentLabel, labelX, 0, COLOR_DEFAULT_FG, COLOR_BG, TextAttributes.BOLD);
+  fb.drawText(
+    currentLabel,
+    labelX,
+    0,
+    COLOR_DEFAULT_FG,
+    COLOR_BG,
+    TextAttributes.BOLD,
+  );
 }
 
 function renderGraph(
@@ -240,8 +255,14 @@ function renderGraph(
   fb.clear(COLOR_BG);
 
   const rawValues = readings.map((r) => r.value);
-  const valMin = Math.max(40, Math.min(...rawValues, settings.lowThreshold) - 10);
-  const valMax = Math.min(400, Math.max(...rawValues, settings.highThreshold) + 10);
+  const valMin = Math.max(
+    40,
+    Math.min(...rawValues, settings.lowThreshold) - 10,
+  );
+  const valMax = Math.min(
+    400,
+    Math.max(...rawValues, settings.highThreshold) + 10,
+  );
   const timeMin = firstReading.timestamp.getTime();
   const timeMax = lastReading.timestamp.getTime();
   const axisRow = MARGIN_TOP + plotH;
