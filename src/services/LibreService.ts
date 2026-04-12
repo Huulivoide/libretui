@@ -2,13 +2,7 @@ import {
   LibreLinkClient,
   type GlucoseReading,
 } from 'libre-link-unofficial-api';
-
-export const SERVERS = {
-  US: 'https://api-us.libreview.io',
-  EU: 'https://api-eu.libreview.io',
-} as const;
-
-export type Server = (typeof SERVERS)[keyof typeof SERVERS];
+import { type Server } from '../state/AppState.js';
 
 let client: LibreLinkClient | null = null;
 
@@ -29,7 +23,9 @@ export async function login(
 }
 
 function getClient(): LibreLinkClient {
-  if (!client) throw new Error('LibreService: not logged in');
+  if (!client) {
+    throw new Error('LibreService: not logged in');
+  }
   return client;
 }
 
@@ -39,7 +35,7 @@ export async function read(): Promise<GlucoseReading> {
 }
 
 /** Fetch historical graph data */
-export async function history(): Promise<GlucoseReading[]> {
+export async function history(): Promise<Array<GlucoseReading>> {
   return getClient().history();
 }
 
