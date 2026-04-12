@@ -78,9 +78,13 @@ function navigateTo(screen: Screen): void {
   }
 }
 
-// Tab/Shift+Tab cycles between logged-in screens.
-// Login and Settings intercept Tab themselves, so we skip those.
+// Tab/Shift+Tab cycles between Live and Graph (not Login or Settings — they use Tab for field focus).
+// Escape from Settings returns to Live.
 function onGlobalKeyPress(key: KeyEvent): void {
+  if (activeScreen === Screen.Settings && key.name === 'escape') {
+    navigateTo(Screen.Live);
+    return;
+  }
   if (key.name !== 'tab') {
     return;
   }
@@ -122,6 +126,7 @@ mount(
   Screen.Login,
   createLoginScreen(renderer, {
     initialEmail: savedCreds?.email,
+    initialPassword: savedCreds?.password,
     initialServer: settings.server,
     onLogin: handleLogin,
   }),
