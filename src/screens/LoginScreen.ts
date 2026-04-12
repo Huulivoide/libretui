@@ -28,6 +28,7 @@ const FOCUS_ORDER: ReadonlyArray<FocusField> = ['server', 'email', 'password'];
 
 export type LoginScreenOptions = {
   readonly initialEmail?: string;
+  readonly initialPassword?: string;
   readonly initialServer?: Server;
   readonly onLogin: (
     email: string,
@@ -216,7 +217,7 @@ export function createLoginScreen(
   options: LoginScreenOptions,
 ): LoginScreenComponent {
   let currentFocus: FocusField = 'server';
-  let passwordValue = '';
+  let passwordValue = options.initialPassword ?? '';
   let isLoggingIn = false;
 
   // ─── Build UI sections ──────────────────────────────────────────────────────
@@ -261,6 +262,8 @@ export function createLoginScreen(
     text: passwordText,
     cursor: passwordCursor,
   } = buildPasswordSection(ctx);
+
+  passwordText.content = '*'.repeat(passwordValue.length);
 
   const statusText = new TextRenderable(ctx, {
     id: 'login-status',
