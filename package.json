@@ -24,8 +24,8 @@
   },
   "homepage": "https://github.com/Huulivoide/libretui#readme",
   "dependencies": {
+    "@envsec/sdk": "^1.0.0-beta.16",
     "@opentui/core": "^0.1.97",
-    "envsec": "^1.0.0-beta.16",
     "libre-link-unofficial-api": "^1.0.0-alpha.7"
   },
   "devDependencies": {
