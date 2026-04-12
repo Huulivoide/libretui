@@ -48,6 +48,167 @@ const SERVER_TAB_OPTIONS = [
   { name: 'EU', description: SERVERS.EU },
 ];
 
+// ─── Section builders ────────────────────────────────────────────────────────
+
+function buildTitle(ctx: RenderContext): BoxRenderable {
+  const box = new BoxRenderable(ctx, {
+    id: 'login-title-box',
+    flexDirection: 'column',
+    gap: 0,
+  });
+
+  box.add(
+    new TextRenderable(ctx, {
+      id: 'login-title',
+      content: 'FreeStyle Libre CGM',
+      fg: COLOR_DEFAULT_FG,
+      attributes: TextAttributes.BOLD,
+      width: '100%',
+    }),
+  );
+
+  box.add(
+    new TextRenderable(ctx, {
+      id: 'login-subtitle',
+      content: 'Sign In',
+      fg: COLOR_AXIS,
+      width: '100%',
+    }),
+  );
+
+  return box;
+}
+
+function buildServerSection(
+  ctx: RenderContext,
+  initialIndex: number,
+): { row: BoxRenderable; tab: TabSelectRenderable } {
+  const row = new BoxRenderable(ctx, {
+    id: 'login-server-row',
+    flexDirection: 'row',
+    gap: 1,
+    alignItems: 'center',
+  });
+
+  row.add(
+    new TextRenderable(ctx, {
+      id: 'login-server-label',
+      content: 'Server:',
+      fg: COLOR_AXIS,
+      width: 10,
+    }),
+  );
+
+  const tab = new TabSelectRenderable(ctx, {
+    id: 'login-server-tab',
+    options: SERVER_TAB_OPTIONS,
+    tabWidth: 6,
+    textColor: COLOR_TAB_INACTIVE_FG,
+    focusedBackgroundColor: COLOR_TAB_INACTIVE_BG,
+    focusedTextColor: COLOR_DEFAULT_FG,
+    selectedBackgroundColor: COLOR_TAB_ACTIVE_BG,
+    selectedTextColor: COLOR_TAB_ACTIVE_FG,
+    showDescription: false,
+  });
+  tab.setSelectedIndex(initialIndex);
+
+  row.add(tab);
+
+  return { row, tab };
+}
+
+function buildEmailSection(
+  ctx: RenderContext,
+  initialEmail: string,
+): { row: BoxRenderable; input: InputRenderable } {
+  const row = new BoxRenderable(ctx, {
+    id: 'login-email-row',
+    flexDirection: 'row',
+    gap: 1,
+    alignItems: 'center',
+  });
+
+  row.add(
+    new TextRenderable(ctx, {
+      id: 'login-email-label',
+      content: 'Email:',
+      fg: COLOR_AXIS,
+      width: 10,
+    }),
+  );
+
+  const input = new InputRenderable(ctx, {
+    id: 'login-email-input',
+    value: initialEmail,
+    placeholder: 'user@example.com',
+    width: 36,
+    textColor: COLOR_DEFAULT_FG,
+    backgroundColor: COLOR_TAB_INACTIVE_BG,
+    focusedBackgroundColor: COLOR_TAB_INACTIVE_BG,
+    cursorColor: COLOR_TAB_ACTIVE_BG,
+  });
+
+  row.add(input);
+
+  return { row, input };
+}
+
+type PasswordSection = {
+  row: BoxRenderable;
+  box: BoxRenderable;
+  text: TextRenderable;
+  cursor: TextRenderable;
+};
+
+function buildPasswordSection(ctx: RenderContext): PasswordSection {
+  const row = new BoxRenderable(ctx, {
+    id: 'login-password-row',
+    flexDirection: 'row',
+    gap: 1,
+    alignItems: 'center',
+  });
+
+  row.add(
+    new TextRenderable(ctx, {
+      id: 'login-password-label',
+      content: 'Password:',
+      fg: COLOR_AXIS,
+      width: 10,
+    }),
+  );
+
+  const box = new BoxRenderable(ctx, {
+    id: 'login-password-box',
+    width: 36,
+    height: 1,
+    backgroundColor: COLOR_TAB_INACTIVE_BG,
+    paddingLeft: 1,
+    paddingRight: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+  });
+
+  const text = new TextRenderable(ctx, {
+    id: 'login-password-text',
+    content: '',
+    fg: COLOR_DEFAULT_FG,
+  });
+
+  const cursor = new TextRenderable(ctx, {
+    id: 'login-password-cursor',
+    content: ' ',
+    fg: COLOR_BG,
+    bg: COLOR_AXIS,
+  });
+  cursor.visible = false;
+
+  box.add(text);
+  box.add(cursor);
+  row.add(box);
+
+  return { row, box, text, cursor };
+}
+
 // ─── Factory ──────────────────────────────────────────────────────────────────
 
 export function createLoginScreen(
@@ -58,9 +219,7 @@ export function createLoginScreen(
   let passwordValue = '';
   let isLoggingIn = false;
 
-  const initialServerIndex = options.initialServer === SERVERS.EU ? 1 : 0;
-
-  // ─── Root ───────────────────────────────────────────────────────────────────
+  // ─── Build UI sections ──────────────────────────────────────────────────────
 
   const root = new BoxRenderable(ctx, {
     id: 'login-root',
@@ -70,8 +229,6 @@ export function createLoginScreen(
     justifyContent: 'center',
     alignItems: 'center',
   });
-
-  // ─── Card ───────────────────────────────────────────────────────────────────
 
   const card = new BoxRenderable(ctx, {
     id: 'login-card',
@@ -85,133 +242,25 @@ export function createLoginScreen(
     width: 52,
   });
 
-  // ─── Title ──────────────────────────────────────────────────────────────────
+  const titleBox = buildTitle(ctx);
 
-  const title = new TextRenderable(ctx, {
-    id: 'login-title',
-    content: 'FreeStyle Libre CGM',
-    fg: COLOR_DEFAULT_FG,
-    attributes: TextAttributes.BOLD,
-    width: '100%',
-  });
+  const initialServerIndex = options.initialServer === SERVERS.EU ? 1 : 0;
+  const { row: serverRow, tab: serverTab } = buildServerSection(
+    ctx,
+    initialServerIndex,
+  );
 
-  const subtitle = new TextRenderable(ctx, {
-    id: 'login-subtitle',
-    content: 'Sign In',
-    fg: COLOR_AXIS,
-    width: '100%',
-  });
+  const { row: emailRow, input: emailInput } = buildEmailSection(
+    ctx,
+    options.initialEmail ?? '',
+  );
 
-  // ─── Server row ─────────────────────────────────────────────────────────────
-
-  const serverRow = new BoxRenderable(ctx, {
-    id: 'login-server-row',
-    flexDirection: 'row',
-    gap: 1,
-    alignItems: 'center',
-  });
-
-  const serverLabel = new TextRenderable(ctx, {
-    id: 'login-server-label',
-    content: 'Server:',
-    fg: COLOR_AXIS,
-    width: 10,
-  });
-
-  const serverTab = new TabSelectRenderable(ctx, {
-    id: 'login-server-tab',
-    options: SERVER_TAB_OPTIONS,
-    tabWidth: 6,
-    textColor: COLOR_TAB_INACTIVE_FG,
-    focusedBackgroundColor: COLOR_TAB_INACTIVE_BG,
-    focusedTextColor: COLOR_DEFAULT_FG,
-    selectedBackgroundColor: COLOR_TAB_ACTIVE_BG,
-    selectedTextColor: COLOR_TAB_ACTIVE_FG,
-    showDescription: false,
-  });
-
-  serverTab.setSelectedIndex(initialServerIndex);
-
-  serverRow.add(serverLabel);
-  serverRow.add(serverTab);
-
-  // ─── Email row ──────────────────────────────────────────────────────────────
-
-  const emailRow = new BoxRenderable(ctx, {
-    id: 'login-email-row',
-    flexDirection: 'row',
-    gap: 1,
-    alignItems: 'center',
-  });
-
-  const emailLabel = new TextRenderable(ctx, {
-    id: 'login-email-label',
-    content: 'Email:',
-    fg: COLOR_AXIS,
-    width: 10,
-  });
-
-  const emailInput = new InputRenderable(ctx, {
-    id: 'login-email-input',
-    value: options.initialEmail ?? '',
-    placeholder: 'user@example.com',
-    width: 36,
-    textColor: COLOR_DEFAULT_FG,
-    backgroundColor: COLOR_TAB_INACTIVE_BG,
-    focusedBackgroundColor: COLOR_TAB_INACTIVE_BG,
-    cursorColor: COLOR_TAB_ACTIVE_BG,
-  });
-
-  emailRow.add(emailLabel);
-  emailRow.add(emailInput);
-
-  // ─── Password row ───────────────────────────────────────────────────────────
-
-  const passwordRow = new BoxRenderable(ctx, {
-    id: 'login-password-row',
-    flexDirection: 'row',
-    gap: 1,
-    alignItems: 'center',
-  });
-
-  const passwordLabel = new TextRenderable(ctx, {
-    id: 'login-password-label',
-    content: 'Password:',
-    fg: COLOR_AXIS,
-    width: 10,
-  });
-
-  const passwordBox = new BoxRenderable(ctx, {
-    id: 'login-password-box',
-    width: 36,
-    height: 1,
-    backgroundColor: COLOR_TAB_INACTIVE_BG,
-    paddingLeft: 1,
-    paddingRight: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-  });
-
-  const passwordText = new TextRenderable(ctx, {
-    id: 'login-password-text',
-    content: '',
-    fg: COLOR_DEFAULT_FG,
-  });
-
-  const passwordCursor = new TextRenderable(ctx, {
-    id: 'login-password-cursor',
-    content: ' ',
-    fg: COLOR_BG,
-    bg: COLOR_AXIS,
-  });
-  passwordCursor.visible = false;
-
-  passwordBox.add(passwordText);
-  passwordBox.add(passwordCursor);
-  passwordRow.add(passwordLabel);
-  passwordRow.add(passwordBox);
-
-  // ─── Status ─────────────────────────────────────────────────────────────────
+  const {
+    row: passwordRow,
+    box: passwordBox,
+    text: passwordText,
+    cursor: passwordCursor,
+  } = buildPasswordSection(ctx);
 
   const statusText = new TextRenderable(ctx, {
     id: 'login-status',
@@ -220,23 +269,16 @@ export function createLoginScreen(
     width: '100%',
   });
 
-  // ─── Assemble card ──────────────────────────────────────────────────────────
-
-  card.add(title);
-  card.add(subtitle);
+  card.add(titleBox);
   card.add(serverRow);
   card.add(emailRow);
   card.add(passwordRow);
   card.add(statusText);
-
   root.add(card);
 
   // ─── Focus helpers ──────────────────────────────────────────────────────────
 
   function setPasswordFocus(focused: boolean): void {
-    passwordBox.backgroundColor = focused
-      ? COLOR_TAB_INACTIVE_BG
-      : COLOR_TAB_INACTIVE_BG;
     passwordBox.borderColor = focused ? COLOR_TAB_ACTIVE_BG : COLOR_AXIS;
     passwordCursor.visible = focused;
   }
@@ -262,12 +304,6 @@ export function createLoginScreen(
     const next =
       FOCUS_ORDER[(idx + direction + FOCUS_ORDER.length) % FOCUS_ORDER.length];
     applyFocus(next);
-  }
-
-  // ─── Password display ───────────────────────────────────────────────────────
-
-  function updatePasswordDisplay(): void {
-    passwordText.content = '*'.repeat(passwordValue.length);
   }
 
   // ─── Status helpers ──────────────────────────────────────────────────────────
@@ -298,8 +334,7 @@ export function createLoginScreen(
     isLoggingIn = true;
     setStatus('Signing in…');
 
-    const serverIndex = serverTab.getSelectedIndex();
-    const server = serverIndex === 1 ? SERVERS.EU : SERVERS.US;
+    const server = serverTab.getSelectedIndex() === 1 ? SERVERS.EU : SERVERS.US;
 
     try {
       await options.onLogin(email, passwordValue, server);
@@ -326,36 +361,32 @@ export function createLoginScreen(
       return;
     }
 
-    // Password field manual input
     if (currentFocus === 'password') {
       if (key.name === 'enter' || key.name === 'return') {
         void submit();
       } else if (key.name === 'backspace') {
         passwordValue = passwordValue.slice(0, -1);
-        updatePasswordDisplay();
+        passwordText.content = '*'.repeat(passwordValue.length);
       } else if (
         key.sequence.length === 1 &&
         key.sequence.charCodeAt(0) >= 32
       ) {
         passwordValue += key.sequence;
-        updatePasswordDisplay();
+        passwordText.content = '*'.repeat(passwordValue.length);
       }
     }
   }
 
-  // Advance from server to email on Enter/selection
   serverTab.on(TabSelectRenderableEvents.ITEM_SELECTED, () => {
     advanceFocus(1);
   });
 
-  // Advance from email to password on Enter
   emailInput.on(InputRenderableEvents.ENTER, () => {
     advanceFocus(1);
   });
 
   ctx.keyInput.on('keypress', onKeyPress);
 
-  // Initial focus
   applyFocus('server');
 
   // ─── Destroy ─────────────────────────────────────────────────────────────────
