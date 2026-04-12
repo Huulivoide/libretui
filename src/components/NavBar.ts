@@ -1,10 +1,11 @@
-import {
-  BoxRenderable,
-  TextRenderable,
-  RGBA,
-  type RenderContext,
-} from '@opentui/core';
+import { BoxRenderable, TextRenderable, type RenderContext } from '@opentui/core';
 import { Screen } from '../state/AppState.js';
+import {
+  COLOR_TAB_ACTIVE_BG,
+  COLOR_TAB_ACTIVE_FG,
+  COLOR_TAB_INACTIVE_BG,
+  COLOR_TAB_INACTIVE_FG,
+} from './theme.js';
 
 type NavTab = {
   readonly screen: Screen;
@@ -16,11 +17,6 @@ const NAV_TABS: ReadonlyArray<NavTab> = [
   { screen: Screen.Graph, label: 'Graph' },
   { screen: Screen.Settings, label: 'Settings' },
 ];
-
-const ACTIVE_BG = RGBA.fromHex('#7aa2f7');
-const ACTIVE_FG = RGBA.fromHex('#1a1b26');
-const INACTIVE_BG = RGBA.fromHex('#1e2030');
-const INACTIVE_FG = RGBA.fromHex('#545c7e');
 
 type TabEntry = {
   readonly box: BoxRenderable;
@@ -39,7 +35,7 @@ export function createNavBar(ctx: RenderContext): NavBarComponent {
     flexDirection: 'row',
     width: '100%',
     height: 1,
-    backgroundColor: INACTIVE_BG,
+    backgroundColor: COLOR_TAB_INACTIVE_BG,
   });
 
   const tabs: Array<TabEntry> = NAV_TABS.map((tab) => {
@@ -48,12 +44,12 @@ export function createNavBar(ctx: RenderContext): NavBarComponent {
       flexDirection: 'row',
       paddingLeft: 2,
       paddingRight: 2,
-      backgroundColor: INACTIVE_BG,
+      backgroundColor: COLOR_TAB_INACTIVE_BG,
     });
     const label = new TextRenderable(ctx, {
       id: `navbar-label-${tab.screen}`,
       content: tab.label,
-      fg: INACTIVE_FG,
+      fg: COLOR_TAB_INACTIVE_FG,
     });
     box.add(label);
     root.add(box);
@@ -63,8 +59,8 @@ export function createNavBar(ctx: RenderContext): NavBarComponent {
   const setActive = (screen: Screen): void => {
     for (const tab of tabs) {
       const isActive = tab.screen === screen;
-      tab.box.backgroundColor = isActive ? ACTIVE_BG : INACTIVE_BG;
-      tab.label.fg = isActive ? ACTIVE_FG : INACTIVE_FG;
+      tab.box.backgroundColor = isActive ? COLOR_TAB_ACTIVE_BG : COLOR_TAB_INACTIVE_BG;
+      tab.label.fg = isActive ? COLOR_TAB_ACTIVE_FG : COLOR_TAB_INACTIVE_FG;
     }
   };
 
