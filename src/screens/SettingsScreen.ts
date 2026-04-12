@@ -24,9 +24,9 @@ import {
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type FocusField = 'low' | 'high' | 'unit';
+type FocusField = 'unit' | 'low' | 'high';
 
-const FOCUS_ORDER: ReadonlyArray<FocusField> = ['low', 'high', 'unit'];
+const FOCUS_ORDER: ReadonlyArray<FocusField> = ['unit', 'low', 'high'];
 
 const UNIT_OPTIONS = [
   { name: 'mg/dL', description: Unit.MgDl },
@@ -66,12 +66,28 @@ function buildTitle(ctx: RenderContext): BoxRenderable {
   return box;
 }
 
+function mgdlToDisplay(mgdl: number, unit: Unit): string {
+  return unit === Unit.MmolL ? (mgdl / 18.0).toFixed(1) : String(mgdl);
+}
+
+function displayToMgdl(value: string, unit: Unit): number {
+  const num = parseFloat(value.trim());
+  return unit === Unit.MmolL
+    ? Math.round(num * 18.0)
+    : parseInt(value.trim(), 10);
+}
+
+function unitLabel(unit: Unit): string {
+  return unit === Unit.MmolL ? 'mmol/L' : 'mg/dL';
+}
+
 function buildThresholdRow(
   ctx: RenderContext,
   id: string,
   label: string,
-  initialValue: number,
-): { row: BoxRenderable; input: InputRenderable } {
+  initialMgdl: number,
+  initialUnit: Unit,
+): { row: BoxRenderable; input: InputRenderable; unitText: TextRenderable } {
   const row = new BoxRenderable(ctx, {
     id: `settings-${id}-row`,
     flexDirection: 'row',
@@ -90,7 +106,7 @@ function buildThresholdRow(
 
   const input = new InputRenderable(ctx, {
     id: `settings-${id}-input`,
-    value: String(initialValue),
+    value: mgdlToDisplay(initialMgdl, initialUnit),
     width: 8,
     textColor: COLOR_DEFAULT_FG,
     backgroundColor: COLOR_TAB_INACTIVE_BG,
@@ -100,15 +116,15 @@ function buildThresholdRow(
 
   row.add(input);
 
-  row.add(
-    new TextRenderable(ctx, {
-      id: `settings-${id}-unit`,
-      content: 'mg/dL',
-      fg: COLOR_AXIS,
-    }),
-  );
+  const unitText = new TextRenderable(ctx, {
+    id: `settings-${id}-unit`,
+    content: unitLabel(initialUnit),
+    fg: COLOR_AXIS,
+  });
 
-  return { row, input };
+  row.add(unitText);
+
+  return { row, input, unitText };
 }
 
 function buildUnitSection(
@@ -155,7 +171,8 @@ export function createSettingsScreen(
   ctx: RenderContext,
   options: SettingsScreenOptions,
 ): SettingsScreenComponent {
-  let currentFocus: FocusField = 'low';
+  let currentFocus: FocusField = 'unit';
+  let currentUnit: Unit = options.settings.unit;
   let isSaving = false;
 
   // ─── Build UI ───────────────────────────────────────────────────────────────
@@ -193,22 +210,32 @@ export function createSettingsScreen(
 
   const titleBox = buildTitle(ctx);
 
-  const { row: lowRow, input: lowInput } = buildThresholdRow(
+  const { row: unitRow, tab: unitTab } = buildUnitSection(
+    ctx,
+    options.settings.unit,
+  );
+
+  const {
+    row: lowRow,
+    input: lowInput,
+    unitText: lowUnitText,
+  } = buildThresholdRow(
     ctx,
     'low',
     'Low threshold:',
     options.settings.lowThreshold,
+    options.settings.unit,
   );
 
-  const { row: highRow, input: highInput } = buildThresholdRow(
+  const {
+    row: highRow,
+    input: highInput,
+    unitText: highUnitText,
+  } = buildThresholdRow(
     ctx,
     'high',
     'High threshold:',
     options.settings.highThreshold,
-  );
-
-  const { row: unitRow, tab: unitTab } = buildUnitSection(
-    ctx,
     options.settings.unit,
   );
 
@@ -220,9 +247,9 @@ export function createSettingsScreen(
   });
 
   card.add(titleBox);
+  card.add(unitRow);
   card.add(lowRow);
   card.add(highRow);
-  card.add(unitRow);
   card.add(statusText);
   content.add(card);
   root.add(navBarRoot);
@@ -236,18 +263,18 @@ export function createSettingsScreen(
   }
 
   function applyFocus(field: FocusField): void {
+    unitTab.blur();
     lowInput.blur();
     highInput.blur();
-    unitTab.blur();
 
     currentFocus = field;
 
-    if (field === 'low') {
-      lowInput.focus();
-    } else if (field === 'high') {
-      highInput.focus();
-    } else {
+    if (field === 'unit') {
       unitTab.focus();
+    } else if (field === 'low') {
+      lowInput.focus();
+    } else {
+      highInput.focus();
     }
   }
 
@@ -258,6 +285,25 @@ export function createSettingsScreen(
     applyFocus(next);
   }
 
+  function applyUnit(newUnit: Unit): void {
+    if (newUnit === currentUnit) {
+      return;
+    }
+    const lowMgdl = displayToMgdl(lowInput.value, currentUnit);
+    const highMgdl = displayToMgdl(highInput.value, currentUnit);
+    currentUnit = newUnit;
+    lowInput.value = mgdlToDisplay(
+      isNaN(lowMgdl) ? options.settings.lowThreshold : lowMgdl,
+      newUnit,
+    );
+    highInput.value = mgdlToDisplay(
+      isNaN(highMgdl) ? options.settings.highThreshold : highMgdl,
+      newUnit,
+    );
+    lowUnitText.content = unitLabel(newUnit);
+    highUnitText.content = unitLabel(newUnit);
+  }
+
   // ─── Save ────────────────────────────────────────────────────────────────────
 
   async function save(): Promise<void> {
@@ -265,26 +311,24 @@ export function createSettingsScreen(
       return;
     }
 
-    const low = parseInt(lowInput.value.trim(), 10);
-    const high = parseInt(highInput.value.trim(), 10);
+    const lowMgdl = displayToMgdl(lowInput.value, currentUnit);
+    const highMgdl = displayToMgdl(highInput.value, currentUnit);
 
-    if (isNaN(low) || low < 40 || low > 400) {
+    if (isNaN(lowMgdl) || lowMgdl < 40 || lowMgdl > 400) {
       applyFocus('low');
       setStatus('Low must be 40–400 mg/dL', true);
       return;
     }
-    if (isNaN(high) || high < 40 || high > 400) {
+    if (isNaN(highMgdl) || highMgdl < 40 || highMgdl > 400) {
       applyFocus('high');
       setStatus('High must be 40–400 mg/dL', true);
       return;
     }
-    if (low >= high) {
+    if (lowMgdl >= highMgdl) {
       applyFocus('low');
       setStatus('Low must be less than High', true);
       return;
     }
-
-    const unit = unitTab.getSelectedIndex() === 1 ? Unit.MmolL : Unit.MgDl;
 
     isSaving = true;
     setStatus('Saving…');
@@ -292,9 +336,9 @@ export function createSettingsScreen(
     try {
       await options.onSave({
         ...options.settings,
-        lowThreshold: low,
-        highThreshold: high,
-        unit,
+        lowThreshold: lowMgdl,
+        highThreshold: highMgdl,
+        unit: currentUnit,
       });
       setStatus('Saved');
     } catch (err) {
@@ -316,17 +360,20 @@ export function createSettingsScreen(
     }
   }
 
+  unitTab.on(TabSelectRenderableEvents.ITEM_SELECTED, () => {
+    applyUnit(unitTab.getSelectedIndex() === 1 ? Unit.MmolL : Unit.MgDl);
+    advanceFocus(1);
+  });
   lowInput.on(InputRenderableEvents.ENTER, () => {
     advanceFocus(1);
   });
   highInput.on(InputRenderableEvents.ENTER, () => {
-    advanceFocus(1);
+    void save();
   });
-  unitTab.on(TabSelectRenderableEvents.ITEM_SELECTED, () => void save());
 
   ctx.keyInput.on('keypress', onKeyPress);
 
-  applyFocus('low');
+  applyFocus('unit');
 
   // ─── Destroy ─────────────────────────────────────────────────────────────────
 
