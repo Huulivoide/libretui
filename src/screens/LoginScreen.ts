@@ -3,8 +3,8 @@ import {
   TextRenderable,
   InputRenderable,
   InputRenderableEvents,
-  TabSelectRenderable,
-  TabSelectRenderableEvents,
+  SelectRenderable,
+  SelectRenderableEvents,
   TextAttributes,
   type RenderContext,
 } from '@opentui/core';
@@ -44,7 +44,7 @@ export type LoginScreenComponent = {
 
 // ─── Server options ───────────────────────────────────────────────────────────
 
-const SERVER_TAB_OPTIONS = [
+const SERVER_SELECT_OPTIONS = [
   { name: 'USA', description: SERVERS.US },
   { name: 'EU', description: SERVERS.EU },
 ];
@@ -83,7 +83,7 @@ function buildTitle(ctx: RenderContext): BoxRenderable {
 function buildServerSection(
   ctx: RenderContext,
   initialIndex: number,
-): { row: BoxRenderable; tab: TabSelectRenderable } {
+): { row: BoxRenderable; select: SelectRenderable } {
   const row = new BoxRenderable(ctx, {
     id: 'login-server-row',
     flexDirection: 'row',
@@ -100,22 +100,24 @@ function buildServerSection(
     }),
   );
 
-  const tab = new TabSelectRenderable(ctx, {
-    id: 'login-server-tab',
-    options: SERVER_TAB_OPTIONS,
-    tabWidth: 6,
+  const select = new SelectRenderable(ctx, {
+    id: 'login-server-select',
+    options: SERVER_SELECT_OPTIONS,
+    width: 8,
+    height: 2,
     textColor: COLOR_TAB_INACTIVE_FG,
+    backgroundColor: COLOR_BG,
     focusedBackgroundColor: COLOR_TAB_INACTIVE_BG,
     focusedTextColor: COLOR_DEFAULT_FG,
     selectedBackgroundColor: COLOR_TAB_ACTIVE_BG,
     selectedTextColor: COLOR_TAB_ACTIVE_FG,
     showDescription: false,
   });
-  tab.setSelectedIndex(initialIndex);
+  select.setSelectedIndex(initialIndex);
 
-  row.add(tab);
+  row.add(select);
 
-  return { row, tab };
+  return { row, select };
 }
 
 function buildEmailSection(
@@ -246,7 +248,7 @@ export function createLoginScreen(
   const titleBox = buildTitle(ctx);
 
   const initialServerIndex = options.initialServer === SERVERS.EU ? 1 : 0;
-  const { row: serverRow, tab: serverTab } = buildServerSection(
+  const { row: serverRow, select: serverSelect } = buildServerSection(
     ctx,
     initialServerIndex,
   );
@@ -287,14 +289,14 @@ export function createLoginScreen(
   }
 
   function applyFocus(field: FocusField): void {
-    serverTab.blur();
+    serverSelect.blur();
     emailInput.blur();
     setPasswordFocus(false);
 
     currentFocus = field;
 
     if (field === 'server') {
-      serverTab.focus();
+      serverSelect.focus();
     } else if (field === 'email') {
       emailInput.focus();
     } else {
@@ -337,7 +339,8 @@ export function createLoginScreen(
     isLoggingIn = true;
     setStatus('Signing in…');
 
-    const server = serverTab.getSelectedIndex() === 1 ? SERVERS.EU : SERVERS.US;
+    const server =
+      serverSelect.getSelectedIndex() === 1 ? SERVERS.EU : SERVERS.US;
 
     try {
       await options.onLogin(email, passwordValue, server);
@@ -380,7 +383,7 @@ export function createLoginScreen(
     }
   }
 
-  serverTab.on(TabSelectRenderableEvents.ITEM_SELECTED, () => {
+  serverSelect.on(SelectRenderableEvents.ITEM_SELECTED, () => {
     advanceFocus(1);
   });
 

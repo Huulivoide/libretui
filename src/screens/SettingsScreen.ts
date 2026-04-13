@@ -3,8 +3,8 @@ import {
   TextRenderable,
   InputRenderable,
   InputRenderableEvents,
-  TabSelectRenderable,
-  TabSelectRenderableEvents,
+  SelectRenderable,
+  SelectRenderableEvents,
   TextAttributes,
   type RenderContext,
 } from '@opentui/core';
@@ -130,7 +130,7 @@ function buildThresholdRow(
 function buildUnitSection(
   ctx: RenderContext,
   initialUnit: Unit,
-): { row: BoxRenderable; tab: TabSelectRenderable } {
+): { row: BoxRenderable; select: SelectRenderable } {
   const row = new BoxRenderable(ctx, {
     id: 'settings-unit-row',
     flexDirection: 'row',
@@ -147,22 +147,24 @@ function buildUnitSection(
     }),
   );
 
-  const tab = new TabSelectRenderable(ctx, {
-    id: 'settings-unit-tab',
+  const select = new SelectRenderable(ctx, {
+    id: 'settings-unit-select',
     options: UNIT_OPTIONS,
-    tabWidth: 8,
+    width: 10,
+    height: 2,
     textColor: COLOR_TAB_INACTIVE_FG,
+    backgroundColor: COLOR_BG,
     focusedBackgroundColor: COLOR_TAB_INACTIVE_BG,
     focusedTextColor: COLOR_DEFAULT_FG,
     selectedBackgroundColor: COLOR_TAB_ACTIVE_BG,
     selectedTextColor: COLOR_TAB_ACTIVE_FG,
     showDescription: false,
   });
-  tab.setSelectedIndex(initialUnit === Unit.MmolL ? 1 : 0);
+  select.setSelectedIndex(initialUnit === Unit.MmolL ? 1 : 0);
 
-  row.add(tab);
+  row.add(select);
 
-  return { row, tab };
+  return { row, select };
 }
 
 // ─── Factory ─────────────────────────────────────────────────────────────────
@@ -210,7 +212,7 @@ export function createSettingsScreen(
 
   const titleBox = buildTitle(ctx);
 
-  const { row: unitRow, tab: unitTab } = buildUnitSection(
+  const { row: unitRow, select: unitSelect } = buildUnitSection(
     ctx,
     options.settings.unit,
   );
@@ -263,14 +265,14 @@ export function createSettingsScreen(
   }
 
   function applyFocus(field: FocusField): void {
-    unitTab.blur();
+    unitSelect.blur();
     lowInput.blur();
     highInput.blur();
 
     currentFocus = field;
 
     if (field === 'unit') {
-      unitTab.focus();
+      unitSelect.focus();
     } else if (field === 'low') {
       lowInput.focus();
     } else {
@@ -360,8 +362,8 @@ export function createSettingsScreen(
     }
   }
 
-  unitTab.on(TabSelectRenderableEvents.ITEM_SELECTED, () => {
-    applyUnit(unitTab.getSelectedIndex() === 1 ? Unit.MmolL : Unit.MgDl);
+  unitSelect.on(SelectRenderableEvents.ITEM_SELECTED, () => {
+    applyUnit(unitSelect.getSelectedIndex() === 1 ? Unit.MmolL : Unit.MgDl);
     advanceFocus(1);
   });
   lowInput.on(InputRenderableEvents.ENTER, () => {
