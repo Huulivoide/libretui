@@ -8,8 +8,7 @@ import {
   TextAttributes,
   type RenderContext,
 } from '@opentui/core';
-import { Screen, Unit, type Settings } from '../state/AppState.js';
-import { createNavBar } from '../components/NavBar.js';
+import { Unit, type Settings } from '../state/AppState.js';
 import { createButton } from '../components/Button.js';
 import {
   COLOR_BG,
@@ -43,7 +42,6 @@ const UNIT_OPTIONS = [
 export type SettingsScreenOptions = {
   readonly settings: Settings;
   readonly onSave: (settings: Settings) => Promise<void>;
-  readonly onNavigate: (screen: Screen) => void;
   readonly onLogout: () => Promise<void>;
 };
 
@@ -188,19 +186,6 @@ export function createSettingsScreen(
   // ─── Build UI ───────────────────────────────────────────────────────────────
 
   const root = new BoxRenderable(ctx, {
-    id: 'settings-root',
-    width: '100%',
-    height: '100%',
-    backgroundColor: COLOR_BG,
-    flexDirection: 'column',
-  });
-
-  const { root: navBarRoot, setActive } = createNavBar(ctx, {
-    onNavigate: options.onNavigate,
-  });
-  setActive(Screen.Settings);
-
-  const content = new BoxRenderable(ctx, {
     id: 'settings-content',
     flexGrow: 1,
     flexDirection: 'column',
@@ -295,9 +280,7 @@ export function createSettingsScreen(
   card.add(saveButtonRow);
   logoutButtonRow.add(logoutButton.root);
   card.add(logoutButtonRow);
-  content.add(card);
-  root.add(navBarRoot);
-  root.add(content);
+  root.add(card);
 
   // ─── Helpers ────────────────────────────────────────────────────────────────
 

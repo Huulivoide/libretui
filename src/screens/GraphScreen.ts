@@ -4,8 +4,7 @@ import {
   type RenderContext,
 } from '@opentui/core';
 import { type GlucoseReading } from 'libre-link-unofficial-api';
-import { Screen, type Settings } from '../state/AppState.js';
-import { createNavBar } from '../components/NavBar.js';
+import { type Settings } from '../state/AppState.js';
 import {
   createTrendArrow,
   type TrendArrowComponent,
@@ -28,7 +27,6 @@ const CHROME_HEIGHT = NAVBAR_HEIGHT + HEADER_HEIGHT;
 
 export type GraphScreenOptions = {
   readonly settings: Settings;
-  readonly onNavigate: (screen: Screen) => void;
 };
 
 export type GraphScreenComponent = {
@@ -92,16 +90,9 @@ export function createGraphScreen(
 
   const root = new BoxRenderable(ctx, {
     id: 'graph-root',
-    width: '100%',
-    height: '100%',
-    backgroundColor: COLOR_BG,
+    flexGrow: 1,
     flexDirection: 'column',
   });
-
-  const { root: navBarRoot, setActive } = createNavBar(ctx, {
-    onNavigate: options.onNavigate,
-  });
-  setActive(Screen.Graph);
 
   const {
     root: headerRoot,
@@ -116,7 +107,6 @@ export function createGraphScreen(
     flexGrow: 1,
   });
 
-  root.add(navBarRoot);
   root.add(headerRoot);
   root.add(graphContainer);
 

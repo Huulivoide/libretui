@@ -1,4 +1,4 @@
-import { createCliRenderer, type KeyEvent } from '@opentui/core';
+import { createCliRenderer, type KeyEvent, BoxRenderable } from '@opentui/core';
 import { Screen, type Settings } from './state/AppState.js';
 import { loadSettings, saveSettings } from './services/SettingsStore.js';
 import {
@@ -7,6 +7,7 @@ import {
   clearCredentials,
 } from './services/CredentialStore.js';
 import * as LibreService from './services/LibreService.js';
+import { createAppLayout } from './components/AppLayout.js';
 import { createLoginScreen } from './screens/LoginScreen.js';
 import { createAutoLoginScreen } from './screens/AutoLoginScreen.js';
 import { createLiveScreen } from './screens/LiveScreen.js';
@@ -39,16 +40,46 @@ const savedCreds = await loadCredentials();
 let activeScreen: Screen = Screen.Login;
 let current: ScreenComponent | null = null;
 
+// ─── App layout (shared navbar for nav screens) ───────────────────────────────
+
+const appLayout = createAppLayout(renderer, { onNavigate: navigateTo });
+let layoutMounted = false;
+
+function mountLayout(): void {
+  if (!layoutMounted) {
+    renderer.root.add(appLayout.root);
+    layoutMounted = true;
+  }
+}
+
+function unmountLayout(): void {
+  if (layoutMounted) {
+    renderer.root.remove('app-layout');
+    layoutMounted = false;
+  }
+}
+
 // ─── Screen mounting ─────────────────────────────────────────────────────────
 
 function mount(screen: Screen, component: ScreenComponent): void {
   if (current) {
     current.destroy();
-    renderer.root.remove(current.root.id);
+    if (NAV_SCREENS.includes(activeScreen)) {
+      appLayout.clearContent();
+    } else {
+      renderer.root.remove(current.root.id);
+    }
   }
   activeScreen = screen;
   current = component;
-  renderer.root.add(component.root);
+  if (NAV_SCREENS.includes(screen)) {
+    mountLayout();
+    appLayout.setContent(component.root as BoxRenderable);
+    appLayout.setActiveTab(screen);
+  } else {
+    unmountLayout();
+    renderer.root.add(component.root);
+  }
 }
 
 // ─── Navigation ──────────────────────────────────────────────────────────────
@@ -56,16 +87,10 @@ function mount(screen: Screen, component: ScreenComponent): void {
 function navigateTo(screen: Screen): void {
   switch (screen) {
     case Screen.Live:
-      mount(
-        screen,
-        createLiveScreen(renderer, { settings, onNavigate: navigateTo }),
-      );
+      mount(screen, createLiveScreen(renderer, { settings }));
       break;
     case Screen.Graph:
-      mount(
-        screen,
-        createGraphScreen(renderer, { settings, onNavigate: navigateTo }),
-      );
+      mount(screen, createGraphScreen(renderer, { settings }));
       break;
     case Screen.Settings:
       mount(
@@ -73,7 +98,6 @@ function navigateTo(screen: Screen): void {
         createSettingsScreen(renderer, {
           settings,
           onSave: handleSaveSettings,
-          onNavigate: navigateTo,
           onLogout: handleLogout,
         }),
       );

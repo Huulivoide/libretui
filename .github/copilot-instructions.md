@@ -46,6 +46,7 @@ src/
     SettingsScreen.ts   # Unit (mg/dL / mmol/L) and alert thresholds
   components/
     NavBar.ts           # Top navigation bar shared by Live, Graph, Settings
+    AppLayout.ts        # Shared layout shell: NavBar + content slot for nav screens
     TrendArrow.ts       # Glucose trend direction arrow
     BgGraph.ts          # FrameBufferRenderable glucose history graph
     Button.ts           # Reusable focusable button component
@@ -87,6 +88,18 @@ export function createMyScreen(ctx: RenderContext, options: MyScreenOptions): My
 ### Unit Conversion
 
 `SettingsScreen` stores thresholds internally in mg/dL and converts to/from the selected display unit using `mgdlToDisplay` / `displayToMgdl` helpers. When the unit tab changes, displayed input values update automatically.
+
+### AppLayout Component
+
+`src/components/AppLayout.ts` exports `createAppLayout(ctx, options)` returning `{ root, setActiveTab, setContent, clearContent }`.
+
+- Instantiated **once** in `index.ts` and kept alive across screen navigations.
+- Contains the `NavBar` and a `contentSlot` (`BoxRenderable` with `flexGrow: 1`).
+- `setContent(content)` swaps the active screen's content box into the slot.
+- `clearContent()` removes the current content (called before destroy).
+- `setActiveTab(screen)` delegates to the NavBar's `setActive`.
+- Only used for nav screens (Live, Graph, Settings). Login/AutoLogin mount directly on `renderer.root`.
+- Live, Graph, and Settings screens no longer create their own outer root or NavBar — they return their content box as `root`.
 
 ### Button Component
 
