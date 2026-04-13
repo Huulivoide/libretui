@@ -44,15 +44,10 @@ export function createAutoLoginScreen(
     width: '100%',
     height: '100%',
     backgroundColor: COLOR_BG,
+    flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-  });
-
-  const row = new BoxRenderable(ctx, {
-    id: 'autologin-row',
-    flexDirection: 'row',
     gap: 1,
-    alignItems: 'center',
   });
 
   const spinner = new TextRenderable(ctx, {
@@ -68,9 +63,8 @@ export function createAutoLoginScreen(
     fg: COLOR_AXIS,
   });
 
-  row.add(spinner);
-  row.add(statusText);
-  root.add(row);
+  root.add(spinner);
+  root.add(statusText);
 
   // ─── Spinner animation ──────────────────────────────────────────────────────
 
