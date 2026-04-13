@@ -40,7 +40,7 @@ src/
     SettingsStore.ts    # Persist settings to ~/.config/libretui/settings.json
     CredentialStore.ts  # Persist credentials via envsec SDK
   screens/
-    LoginScreen.ts      # Server selection, email, password input; onLogin callback
+    LoginScreen.ts      # Server selection, email, password input, login button; onLogin callback
     LiveScreen.ts       # Real-time BG reading via async generator stream
     GraphScreen.ts      # Historical BG graph; resize-aware
     SettingsScreen.ts   # Unit (mg/dL / mmol/L) and alert thresholds
