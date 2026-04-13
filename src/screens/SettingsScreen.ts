@@ -10,6 +10,7 @@ import {
 } from '@opentui/core';
 import { Screen, Unit, type Settings } from '../state/AppState.js';
 import { createNavBar } from '../components/NavBar.js';
+import { createButton } from '../components/Button.js';
 import {
   COLOR_BG,
   COLOR_AXIS,
@@ -174,38 +175,6 @@ function buildUnitSection(
   return { row, select };
 }
 
-function buildActionButton(
-  ctx: RenderContext,
-  id: string,
-  label: string,
-): { row: BoxRenderable; button: BoxRenderable; label: TextRenderable } {
-  const row = new BoxRenderable(ctx, {
-    id: `settings-${id}-row`,
-    width: '100%',
-    justifyContent: 'center',
-    alignItems: 'center',
-  });
-
-  const button = new BoxRenderable(ctx, {
-    id: `settings-${id}-button`,
-    paddingLeft: 3,
-    paddingRight: 3,
-    backgroundColor: COLOR_TAB_INACTIVE_BG,
-  });
-
-  const buttonLabel = new TextRenderable(ctx, {
-    id: `settings-${id}-label`,
-    content: label,
-    fg: COLOR_DEFAULT_FG,
-    attributes: TextAttributes.BOLD,
-  });
-
-  button.add(buttonLabel);
-  row.add(button);
-
-  return { row, button, label: buttonLabel };
-}
-
 // ─── Factory ─────────────────────────────────────────────────────────────────
 
 export function createSettingsScreen(
@@ -287,24 +256,42 @@ export function createSettingsScreen(
     width: '100%',
   });
 
-  const {
-    row: saveButtonRow,
-    button: saveButton,
-    label: saveButtonLabel,
-  } = buildActionButton(ctx, 'save', 'Save');
+  const saveButtonRow = new BoxRenderable(ctx, {
+    id: 'settings-save-row',
+    width: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+  });
+  const saveButton = createButton(ctx, {
+    id: 'settings-save-button',
+    label: 'Save',
+    onClick: () => {
+      void save();
+    },
+  });
 
-  const {
-    row: logoutButtonRow,
-    button: logoutButton,
-    label: logoutButtonLabel,
-  } = buildActionButton(ctx, 'logout', 'Logout');
+  const logoutButtonRow = new BoxRenderable(ctx, {
+    id: 'settings-logout-row',
+    width: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+  });
+  const logoutButton = createButton(ctx, {
+    id: 'settings-logout-button',
+    label: 'Logout',
+    onClick: () => {
+      void options.onLogout();
+    },
+  });
 
   card.add(titleBox);
   card.add(unitRow);
   card.add(lowRow);
   card.add(highRow);
   card.add(statusText);
+  saveButtonRow.add(saveButton.root);
   card.add(saveButtonRow);
+  logoutButtonRow.add(logoutButton.root);
   card.add(logoutButtonRow);
   content.add(card);
   root.add(navBarRoot);
@@ -317,23 +304,12 @@ export function createSettingsScreen(
     statusText.fg = isError ? COLOR_MEASUREMENT_RED : COLOR_MEASUREMENT_GREEN;
   }
 
-  function setButtonFocus(
-    button: BoxRenderable,
-    label: TextRenderable,
-    focused: boolean,
-  ): void {
-    button.backgroundColor = focused
-      ? COLOR_TAB_ACTIVE_BG
-      : COLOR_TAB_INACTIVE_BG;
-    label.fg = focused ? COLOR_TAB_ACTIVE_FG : COLOR_DEFAULT_FG;
-  }
-
   function applyFocus(field: FocusField): void {
     unitSelect.blur();
     lowInput.blur();
     highInput.blur();
-    setButtonFocus(saveButton, saveButtonLabel, false);
-    setButtonFocus(logoutButton, logoutButtonLabel, false);
+    saveButton.root.blur();
+    logoutButton.root.blur();
 
     currentFocus = field;
 
@@ -344,9 +320,9 @@ export function createSettingsScreen(
     } else if (field === 'high') {
       highInput.focus();
     } else if (field === 'save') {
-      setButtonFocus(saveButton, saveButtonLabel, true);
+      saveButton.root.focus();
     } else {
-      setButtonFocus(logoutButton, logoutButtonLabel, true);
+      logoutButton.root.focus();
     }
   }
 
@@ -429,20 +405,6 @@ export function createSettingsScreen(
     }
     if (key.name === 'tab') {
       advanceFocus(key.shift ? -1 : 1);
-      return;
-    }
-    if (
-      currentFocus === 'save' &&
-      (key.name === 'enter' || key.name === 'return' || key.name === 'space')
-    ) {
-      void save();
-      return;
-    }
-    if (
-      currentFocus === 'logout' &&
-      (key.name === 'enter' || key.name === 'return' || key.name === 'space')
-    ) {
-      void options.onLogout();
     }
   }
 

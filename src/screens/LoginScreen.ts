@@ -19,6 +19,7 @@ import {
   COLOR_TAB_INACTIVE_FG,
   COLOR_MEASUREMENT_RED,
 } from '../components/theme.js';
+import { createButton } from '../components/Button.js';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -197,38 +198,6 @@ function buildPasswordSection(
   return { row, input };
 }
 
-function buildLoginButtonSection(ctx: RenderContext): {
-  row: BoxRenderable;
-  button: BoxRenderable;
-  label: TextRenderable;
-} {
-  const row = new BoxRenderable(ctx, {
-    id: 'login-button-row',
-    width: '100%',
-    justifyContent: 'center',
-    alignItems: 'center',
-  });
-
-  const button = new BoxRenderable(ctx, {
-    id: 'login-button',
-    paddingLeft: 3,
-    paddingRight: 3,
-    backgroundColor: COLOR_TAB_INACTIVE_BG,
-  });
-
-  const label = new TextRenderable(ctx, {
-    id: 'login-button-label',
-    content: 'Login',
-    fg: COLOR_DEFAULT_FG,
-    attributes: TextAttributes.BOLD,
-  });
-
-  button.add(label);
-  row.add(button);
-
-  return { row, button, label };
-}
-
 // ─── Factory ──────────────────────────────────────────────────────────────────
 
 export function createLoginScreen(
@@ -278,11 +247,20 @@ export function createLoginScreen(
     ctx,
     options.initialPassword ?? '',
   );
-  const {
-    row: loginButtonRow,
-    button: loginButton,
-    label: loginButtonLabel,
-  } = buildLoginButtonSection(ctx);
+
+  const loginButtonRow = new BoxRenderable(ctx, {
+    id: 'login-button-row',
+    width: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+  });
+  const loginButton = createButton(ctx, {
+    id: 'login-button',
+    label: 'Login',
+    onClick: () => {
+      void submit();
+    },
+  });
 
   const statusText = new TextRenderable(ctx, {
     id: 'login-status',
@@ -296,6 +274,7 @@ export function createLoginScreen(
   card.add(emailRow);
   card.add(passwordRow);
   card.add(statusText);
+  loginButtonRow.add(loginButton.root);
   card.add(loginButtonRow);
   root.add(card);
 
@@ -305,18 +284,11 @@ export function createLoginScreen(
 
   // ─── Focus helpers ──────────────────────────────────────────────────────────
 
-  function setLoginButtonFocus(focused: boolean): void {
-    loginButton.backgroundColor = focused
-      ? COLOR_TAB_ACTIVE_BG
-      : COLOR_TAB_INACTIVE_BG;
-    loginButtonLabel.fg = focused ? COLOR_TAB_ACTIVE_FG : COLOR_DEFAULT_FG;
-  }
-
   function applyFocus(field: FocusField): void {
     serverSelect.blur();
     emailInput.blur();
     passwordInput.blur();
-    setLoginButtonFocus(false);
+    loginButton.root.blur();
 
     currentFocus = field;
 
@@ -327,7 +299,7 @@ export function createLoginScreen(
     } else if (field === 'password') {
       passwordInput.focus();
     } else {
-      setLoginButtonFocus(true);
+      loginButton.root.focus();
     }
   }
 
@@ -388,14 +360,6 @@ export function createLoginScreen(
 
     if (key.name === 'tab') {
       advanceFocus(key.shift ? -1 : 1);
-      return;
-    }
-
-    if (
-      currentFocus === 'login' &&
-      (key.name === 'enter' || key.name === 'return' || key.name === 'space')
-    ) {
-      void submit();
     }
   }
 
