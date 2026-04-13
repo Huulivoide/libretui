@@ -4,7 +4,7 @@ import {
 } from 'libre-link-unofficial-api';
 import { type Server } from '../state/AppState.js';
 
-const lluVersion = '4.17.0'
+const lluVersion = '4.17.0';
 
 let client: LibreLinkClient | null = null;
 
