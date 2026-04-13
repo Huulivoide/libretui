@@ -48,6 +48,7 @@ src/
     NavBar.ts           # Top navigation bar shared by Live, Graph, Settings
     TrendArrow.ts       # Glucose trend direction arrow
     BgGraph.ts          # FrameBufferRenderable glucose history graph
+    Button.ts           # Reusable focusable button component
     theme.ts            # Central colour palette (pre-parsed RGBA constants)
 ```
 
@@ -86,6 +87,31 @@ export function createMyScreen(ctx: RenderContext, options: MyScreenOptions): My
 ### Unit Conversion
 
 `SettingsScreen` stores thresholds internally in mg/dL and converts to/from the selected display unit using `mgdlToDisplay` / `displayToMgdl` helpers. When the unit tab changes, displayed input values update automatically.
+
+### Button Component
+
+`src/components/Button.ts` exports `createButton(ctx, options)` returning `{ root: BoxRenderable }`.
+
+- The `root` is a `BoxRenderable` with `focusable: true` containing a `TextRenderable` label.
+- It subscribes to `RenderableEvents.FOCUSED`/`BLURRED` on itself to auto-toggle colors — no manual color management in callers.
+- `onMouseDown` on the root fires `onClick` (click activates even when unfocused).
+- `onKeyDown` on the root fires `onClick` for Enter/Space when focused.
+- Callers call `.root.focus()` / `.root.blur()` for Tab-cycle focus management.
+- Centering is the caller's responsibility (wrap in a `BoxRenderable` row with `justifyContent: 'center'`).
+
+```typescript
+type ButtonOptions = {
+  readonly id: string;
+  readonly label: string;
+  readonly onClick: () => void;
+  readonly paddingLeft?: number;   // default 3
+  readonly paddingRight?: number;  // default 3
+  readonly normalBg?: RGBA;        // default COLOR_TAB_INACTIVE_BG
+  readonly normalFg?: RGBA;        // default COLOR_DEFAULT_FG
+  readonly focusedBg?: RGBA;       // default COLOR_TAB_ACTIVE_BG
+  readonly focusedFg?: RGBA;       // default COLOR_TAB_ACTIVE_FG
+};
+```
 
 ### BgGraph Sizing
 
