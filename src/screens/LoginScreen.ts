@@ -22,14 +22,9 @@ import {
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type FocusField = 'server' | 'email' | 'password';
+type FocusField = 'server' | 'email' | 'password' | 'login';
 
-const FOCUS_ORDER: ReadonlyArray<FocusField | 'login'> = [
-  'server',
-  'email',
-  'password',
-  'login',
-];
+const FOCUS_ORDER: ReadonlyArray<FocusField> = ['server', 'email', 'password', 'login'];
 
 export type LoginScreenOptions = {
   readonly initialEmail?: string;
@@ -209,6 +204,10 @@ function buildLoginButtonSection(ctx: RenderContext): {
 
   const button = new BoxRenderable(ctx, {
     id: 'login-button',
+    width: 11,
+    height: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
     paddingLeft: 3,
     paddingRight: 3,
     backgroundColor: COLOR_TAB_INACTIVE_BG,
@@ -233,7 +232,7 @@ export function createLoginScreen(
   ctx: RenderContext,
   options: LoginScreenOptions,
 ): LoginScreenComponent {
-  let currentFocus: FocusField | 'login' = 'server';
+  let currentFocus: FocusField = 'server';
   let isLoggingIn = false;
 
   // ─── Build UI sections ──────────────────────────────────────────────────────
@@ -306,7 +305,7 @@ export function createLoginScreen(
     loginButtonLabel.fg = focused ? COLOR_TAB_ACTIVE_FG : COLOR_DEFAULT_FG;
   }
 
-  function applyFocus(field: FocusField | 'login'): void {
+  function applyFocus(field: FocusField): void {
     serverSelect.blur();
     emailInput.blur();
     passwordInput.blur();
