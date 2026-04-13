@@ -24,7 +24,12 @@ import {
 
 type FocusField = 'server' | 'email' | 'password';
 
-const FOCUS_ORDER: ReadonlyArray<FocusField> = ['server', 'email', 'password'];
+const FOCUS_ORDER: ReadonlyArray<FocusField | 'login'> = [
+  'server',
+  'email',
+  'password',
+  'login',
+];
 
 export type LoginScreenOptions = {
   readonly initialEmail?: string;
@@ -191,13 +196,44 @@ function buildPasswordSection(
   return { row, input };
 }
 
+function buildLoginButtonSection(ctx: RenderContext): {
+  row: BoxRenderable;
+  button: BoxRenderable;
+  label: TextRenderable;
+} {
+  const row = new BoxRenderable(ctx, {
+    id: 'login-button-row',
+    width: '100%',
+    justifyContent: 'center',
+  });
+
+  const button = new BoxRenderable(ctx, {
+    id: 'login-button',
+    paddingLeft: 3,
+    paddingRight: 3,
+    backgroundColor: COLOR_TAB_INACTIVE_BG,
+  });
+
+  const label = new TextRenderable(ctx, {
+    id: 'login-button-label',
+    content: 'Login',
+    fg: COLOR_DEFAULT_FG,
+    attributes: TextAttributes.BOLD,
+  });
+
+  button.add(label);
+  row.add(button);
+
+  return { row, button, label };
+}
+
 // ─── Factory ──────────────────────────────────────────────────────────────────
 
 export function createLoginScreen(
   ctx: RenderContext,
   options: LoginScreenOptions,
 ): LoginScreenComponent {
-  let currentFocus: FocusField = 'server';
+  let currentFocus: FocusField | 'login' = 'server';
   let isLoggingIn = false;
 
   // ─── Build UI sections ──────────────────────────────────────────────────────
@@ -240,6 +276,11 @@ export function createLoginScreen(
     ctx,
     options.initialPassword ?? '',
   );
+  const {
+    row: loginButtonRow,
+    button: loginButton,
+    label: loginButtonLabel,
+  } = buildLoginButtonSection(ctx);
 
   const statusText = new TextRenderable(ctx, {
     id: 'login-status',
@@ -253,14 +294,23 @@ export function createLoginScreen(
   card.add(emailRow);
   card.add(passwordRow);
   card.add(statusText);
+  card.add(loginButtonRow);
   root.add(card);
 
   // ─── Focus helpers ──────────────────────────────────────────────────────────
 
-  function applyFocus(field: FocusField): void {
+  function setLoginButtonFocus(focused: boolean): void {
+    loginButton.backgroundColor = focused
+      ? COLOR_TAB_ACTIVE_BG
+      : COLOR_TAB_INACTIVE_BG;
+    loginButtonLabel.fg = focused ? COLOR_TAB_ACTIVE_FG : COLOR_DEFAULT_FG;
+  }
+
+  function applyFocus(field: FocusField | 'login'): void {
     serverSelect.blur();
     emailInput.blur();
     passwordInput.blur();
+    setLoginButtonFocus(false);
 
     currentFocus = field;
 
@@ -268,8 +318,10 @@ export function createLoginScreen(
       serverSelect.focus();
     } else if (field === 'email') {
       emailInput.focus();
-    } else {
+    } else if (field === 'password') {
       passwordInput.focus();
+    } else {
+      setLoginButtonFocus(true);
     }
   }
 
@@ -332,6 +384,13 @@ export function createLoginScreen(
       advanceFocus(key.shift ? -1 : 1);
       return;
     }
+
+    if (
+      currentFocus === 'login' &&
+      (key.name === 'enter' || key.name === 'return' || key.name === 'space')
+    ) {
+      void submit();
+    }
   }
 
   serverSelect.on(SelectRenderableEvents.ITEM_SELECTED, () => {
@@ -342,7 +401,7 @@ export function createLoginScreen(
     advanceFocus(1);
   });
   passwordInput.on(InputRenderableEvents.ENTER, () => {
-    void submit();
+    advanceFocus(1);
   });
 
   ctx.keyInput.on('keypress', onKeyPress);
