@@ -98,7 +98,9 @@ export function createGraphScreen(
     flexDirection: 'column',
   });
 
-  const { root: navBarRoot, setActive } = createNavBar(ctx);
+  const { root: navBarRoot, setActive } = createNavBar(ctx, {
+    onNavigate: options.onNavigate,
+  });
   setActive(Screen.Graph);
 
   const {

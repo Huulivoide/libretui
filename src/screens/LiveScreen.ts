@@ -84,7 +84,9 @@ export function createLiveScreen(
     flexDirection: 'column',
   });
 
-  const { root: navBarRoot, setActive } = createNavBar(ctx);
+  const { root: navBarRoot, setActive } = createNavBar(ctx, {
+    onNavigate: options.onNavigate,
+  });
   setActive(Screen.Live);
 
   const {
