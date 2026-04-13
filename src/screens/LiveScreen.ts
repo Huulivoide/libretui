@@ -4,21 +4,15 @@ import {
   type RenderContext,
 } from '@opentui/core';
 import { type GlucoseReading } from 'libre-link-unofficial-api';
-import { Screen, type Settings } from '../state/AppState.js';
-import { createNavBar } from '../components/NavBar.js';
+import { type Settings } from '../state/AppState.js';
 import { createTrendArrow } from '../components/TrendArrow.js';
 import * as LibreService from '../services/LibreService.js';
-import {
-  COLOR_BG,
-  COLOR_AXIS,
-  COLOR_MEASUREMENT_RED,
-} from '../components/theme.js';
+import { COLOR_AXIS, COLOR_MEASUREMENT_RED } from '../components/theme.js';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export type LiveScreenOptions = {
   readonly settings: Settings;
-  readonly onNavigate: (screen: Screen) => void;
 };
 
 export type LiveScreenComponent = {
@@ -76,28 +70,7 @@ export function createLiveScreen(
 
   // ─── Build UI ───────────────────────────────────────────────────────────────
 
-  const root = new BoxRenderable(ctx, {
-    id: 'live-root',
-    width: '100%',
-    height: '100%',
-    backgroundColor: COLOR_BG,
-    flexDirection: 'column',
-  });
-
-  const { root: navBarRoot, setActive } = createNavBar(ctx, {
-    onNavigate: options.onNavigate,
-  });
-  setActive(Screen.Live);
-
-  const {
-    root: contentRoot,
-    trendArrow,
-    lastUpdatedText,
-    errorText,
-  } = buildContent(ctx);
-
-  root.add(navBarRoot);
-  root.add(contentRoot);
+  const { root, trendArrow, lastUpdatedText, errorText } = buildContent(ctx);
 
   // ─── Helpers ────────────────────────────────────────────────────────────────
 
