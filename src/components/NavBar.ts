@@ -28,12 +28,19 @@ type TabEntry = {
   readonly screen: Screen;
 };
 
+export type NavBarOptions = {
+  readonly onNavigate: (screen: Screen) => void;
+};
+
 export type NavBarComponent = {
   readonly root: BoxRenderable;
   readonly setActive: (screen: Screen) => void;
 };
 
-export function createNavBar(ctx: RenderContext): NavBarComponent {
+export function createNavBar(
+  ctx: RenderContext,
+  options: NavBarOptions,
+): NavBarComponent {
   const root = new BoxRenderable(ctx, {
     id: 'navbar',
     flexDirection: 'row',
@@ -49,6 +56,9 @@ export function createNavBar(ctx: RenderContext): NavBarComponent {
       paddingLeft: 2,
       paddingRight: 2,
       backgroundColor: COLOR_TAB_INACTIVE_BG,
+      onMouseDown: () => {
+        options.onNavigate(tab.screen);
+      },
     });
     const label = new TextRenderable(ctx, {
       id: `navbar-label-${tab.screen}`,

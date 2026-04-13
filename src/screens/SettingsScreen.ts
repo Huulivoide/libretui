@@ -195,7 +195,9 @@ export function createSettingsScreen(
     flexDirection: 'column',
   });
 
-  const { root: navBarRoot, setActive } = createNavBar(ctx);
+  const { root: navBarRoot, setActive } = createNavBar(ctx, {
+    onNavigate: options.onNavigate,
+  });
   setActive(Screen.Settings);
 
   const content = new BoxRenderable(ctx, {
