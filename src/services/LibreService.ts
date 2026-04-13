@@ -4,6 +4,8 @@ import {
 } from 'libre-link-unofficial-api';
 import { type Server } from '../state/AppState.js';
 
+const lluVersion = '4.17.0'
+
 let client: LibreLinkClient | null = null;
 
 /**
@@ -18,7 +20,7 @@ export async function login(
   server: Server,
 ): Promise<void> {
   process.env.LIBRE_LINK_API_URL = server;
-  client = new LibreLinkClient({ email, password });
+  client = new LibreLinkClient({ email, password, lluVersion });
   await client.login();
 }
 
