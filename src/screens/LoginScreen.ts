@@ -35,6 +35,7 @@ export type LoginScreenOptions = {
   readonly initialEmail?: string;
   readonly initialPassword?: string;
   readonly initialServer?: Server;
+  readonly initialError?: string;
   readonly onLogin: (
     email: string,
     password: string,
@@ -297,6 +298,10 @@ export function createLoginScreen(
   card.add(statusText);
   card.add(loginButtonRow);
   root.add(card);
+
+  if (options.initialError) {
+    setStatus(options.initialError, true);
+  }
 
   // ─── Focus helpers ──────────────────────────────────────────────────────────
 

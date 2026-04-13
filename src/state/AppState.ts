@@ -8,6 +8,7 @@ export const SERVERS = {
 export type Server = (typeof SERVERS)[keyof typeof SERVERS];
 
 export enum Screen {
+  AutoLogin = 'AutoLogin',
   Login = 'Login',
   Live = 'Live',
   Graph = 'Graph',

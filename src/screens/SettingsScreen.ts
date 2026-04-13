@@ -24,9 +24,15 @@ import {
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type FocusField = 'unit' | 'low' | 'high';
+type FocusField = 'unit' | 'low' | 'high' | 'save' | 'logout';
 
-const FOCUS_ORDER: ReadonlyArray<FocusField> = ['unit', 'low', 'high'];
+const FOCUS_ORDER: ReadonlyArray<FocusField> = [
+  'unit',
+  'low',
+  'high',
+  'save',
+  'logout',
+];
 
 const UNIT_OPTIONS = [
   { name: 'mg/dL', description: Unit.MgDl },
@@ -37,6 +43,7 @@ export type SettingsScreenOptions = {
   readonly settings: Settings;
   readonly onSave: (settings: Settings) => Promise<void>;
   readonly onNavigate: (screen: Screen) => void;
+  readonly onLogout: () => Promise<void>;
 };
 
 export type SettingsScreenComponent = {
@@ -167,6 +174,38 @@ function buildUnitSection(
   return { row, select };
 }
 
+function buildActionButton(
+  ctx: RenderContext,
+  id: string,
+  label: string,
+): { row: BoxRenderable; button: BoxRenderable; label: TextRenderable } {
+  const row = new BoxRenderable(ctx, {
+    id: `settings-${id}-row`,
+    width: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+  });
+
+  const button = new BoxRenderable(ctx, {
+    id: `settings-${id}-button`,
+    paddingLeft: 3,
+    paddingRight: 3,
+    backgroundColor: COLOR_TAB_INACTIVE_BG,
+  });
+
+  const buttonLabel = new TextRenderable(ctx, {
+    id: `settings-${id}-label`,
+    content: label,
+    fg: COLOR_DEFAULT_FG,
+    attributes: TextAttributes.BOLD,
+  });
+
+  button.add(buttonLabel);
+  row.add(button);
+
+  return { row, button, label: buttonLabel };
+}
+
 // ─── Factory ─────────────────────────────────────────────────────────────────
 
 export function createSettingsScreen(
@@ -248,11 +287,25 @@ export function createSettingsScreen(
     width: '100%',
   });
 
+  const {
+    row: saveButtonRow,
+    button: saveButton,
+    label: saveButtonLabel,
+  } = buildActionButton(ctx, 'save', 'Save');
+
+  const {
+    row: logoutButtonRow,
+    button: logoutButton,
+    label: logoutButtonLabel,
+  } = buildActionButton(ctx, 'logout', 'Logout');
+
   card.add(titleBox);
   card.add(unitRow);
   card.add(lowRow);
   card.add(highRow);
   card.add(statusText);
+  card.add(saveButtonRow);
+  card.add(logoutButtonRow);
   content.add(card);
   root.add(navBarRoot);
   root.add(content);
@@ -264,10 +317,23 @@ export function createSettingsScreen(
     statusText.fg = isError ? COLOR_MEASUREMENT_RED : COLOR_MEASUREMENT_GREEN;
   }
 
+  function setButtonFocus(
+    button: BoxRenderable,
+    label: TextRenderable,
+    focused: boolean,
+  ): void {
+    button.backgroundColor = focused
+      ? COLOR_TAB_ACTIVE_BG
+      : COLOR_TAB_INACTIVE_BG;
+    label.fg = focused ? COLOR_TAB_ACTIVE_FG : COLOR_DEFAULT_FG;
+  }
+
   function applyFocus(field: FocusField): void {
     unitSelect.blur();
     lowInput.blur();
     highInput.blur();
+    setButtonFocus(saveButton, saveButtonLabel, false);
+    setButtonFocus(logoutButton, logoutButtonLabel, false);
 
     currentFocus = field;
 
@@ -275,8 +341,12 @@ export function createSettingsScreen(
       unitSelect.focus();
     } else if (field === 'low') {
       lowInput.focus();
-    } else {
+    } else if (field === 'high') {
       highInput.focus();
+    } else if (field === 'save') {
+      setButtonFocus(saveButton, saveButtonLabel, true);
+    } else {
+      setButtonFocus(logoutButton, logoutButtonLabel, true);
     }
   }
 
@@ -359,6 +429,20 @@ export function createSettingsScreen(
     }
     if (key.name === 'tab') {
       advanceFocus(key.shift ? -1 : 1);
+      return;
+    }
+    if (
+      currentFocus === 'save' &&
+      (key.name === 'enter' || key.name === 'return' || key.name === 'space')
+    ) {
+      void save();
+      return;
+    }
+    if (
+      currentFocus === 'logout' &&
+      (key.name === 'enter' || key.name === 'return' || key.name === 'space')
+    ) {
+      void options.onLogout();
     }
   }
 
@@ -370,7 +454,7 @@ export function createSettingsScreen(
     advanceFocus(1);
   });
   highInput.on(InputRenderableEvents.ENTER, () => {
-    void save();
+    advanceFocus(1);
   });
 
   ctx.keyInput.on('keypress', onKeyPress);
