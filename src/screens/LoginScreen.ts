@@ -24,7 +24,12 @@ import {
 
 type FocusField = 'server' | 'email' | 'password' | 'login';
 
-const FOCUS_ORDER: ReadonlyArray<FocusField> = ['server', 'email', 'password', 'login'];
+const FOCUS_ORDER: ReadonlyArray<FocusField> = [
+  'server',
+  'email',
+  'password',
+  'login',
+];
 
 export type LoginScreenOptions = {
   readonly initialEmail?: string;
@@ -200,14 +205,11 @@ function buildLoginButtonSection(ctx: RenderContext): {
     id: 'login-button-row',
     width: '100%',
     justifyContent: 'center',
+    alignItems: 'center',
   });
 
   const button = new BoxRenderable(ctx, {
     id: 'login-button',
-    width: 11,
-    height: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
     paddingLeft: 3,
     paddingRight: 3,
     backgroundColor: COLOR_TAB_INACTIVE_BG,
