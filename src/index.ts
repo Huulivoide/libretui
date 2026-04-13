@@ -4,9 +4,11 @@ import { loadSettings, saveSettings } from './services/SettingsStore.js';
 import {
   loadCredentials,
   saveCredentials,
+  clearCredentials,
 } from './services/CredentialStore.js';
 import * as LibreService from './services/LibreService.js';
 import { createLoginScreen } from './screens/LoginScreen.js';
+import { createAutoLoginScreen } from './screens/AutoLoginScreen.js';
 import { createLiveScreen } from './screens/LiveScreen.js';
 import { createGraphScreen } from './screens/GraphScreen.js';
 import { createSettingsScreen } from './screens/SettingsScreen.js';
@@ -72,6 +74,7 @@ function navigateTo(screen: Screen): void {
           settings,
           onSave: handleSaveSettings,
           onNavigate: navigateTo,
+          onLogout: handleLogout,
         }),
       );
       break;
@@ -120,14 +123,42 @@ async function handleSaveSettings(newSettings: Settings): Promise<void> {
   await saveSettings(newSettings);
 }
 
+async function handleLogout(): Promise<void> {
+  await clearCredentials();
+  LibreService.logout();
+  mount(Screen.Login, createLoginScreen(renderer, { onLogin: handleLogin }));
+}
+
 // ─── Initial screen ──────────────────────────────────────────────────────────
 
-mount(
-  Screen.Login,
-  createLoginScreen(renderer, {
-    initialEmail: savedCreds?.email,
-    initialPassword: savedCreds?.password,
-    initialServer: settings.server,
-    onLogin: handleLogin,
-  }),
-);
+function mountLoginScreen(errorMessage?: string): void {
+  mount(
+    Screen.Login,
+    createLoginScreen(renderer, {
+      initialEmail: savedCreds?.email,
+      initialPassword: savedCreds?.password,
+      initialServer: settings.server,
+      initialError: errorMessage,
+      onLogin: handleLogin,
+    }),
+  );
+}
+
+if (savedCreds) {
+  mount(
+    Screen.AutoLogin,
+    createAutoLoginScreen(renderer, {
+      email: savedCreds.email,
+      password: savedCreds.password,
+      server: settings.server,
+      onSuccess: () => {
+        navigateTo(Screen.Live);
+      },
+      onFailure: (error) => {
+        mountLoginScreen(error);
+      },
+    }),
+  );
+} else {
+  mountLoginScreen();
+}
