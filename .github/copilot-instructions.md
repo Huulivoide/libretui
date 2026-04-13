@@ -40,7 +40,7 @@ src/
     SettingsStore.ts    # Persist settings to ~/.config/libretui/settings.json
     CredentialStore.ts  # Persist credentials via envsec SDK
   screens/
-    LoginScreen.ts      # Server selection, email, masked password; onLogin callback
+    LoginScreen.ts      # Server selection, email, password input; onLogin callback
     LiveScreen.ts       # Real-time BG reading via async generator stream
     GraphScreen.ts      # Historical BG graph; resize-aware
     SettingsScreen.ts   # Unit (mg/dL / mmol/L) and alert thresholds
@@ -81,7 +81,7 @@ export function createMyScreen(ctx: RenderContext, options: MyScreenOptions): My
 
 ### Password Field
 
-`LoginScreen` implements a custom masked field (no native `InputRenderable` password mode). A `BoxRenderable` contains a `TextRenderable` showing asterisks and a block-cursor `TextRenderable`. Keypresses are intercepted globally; the actual password string is stored separately from the display.
+`LoginScreen` uses a regular `InputRenderable` for the password field. The value is shown as typed and `Enter` submits from that input.
 
 ### Unit Conversion
 

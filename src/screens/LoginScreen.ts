@@ -156,14 +156,10 @@ function buildEmailSection(
   return { row, input };
 }
 
-type PasswordSection = {
-  row: BoxRenderable;
-  box: BoxRenderable;
-  text: TextRenderable;
-  cursor: TextRenderable;
-};
-
-function buildPasswordSection(ctx: RenderContext): PasswordSection {
+function buildPasswordSection(
+  ctx: RenderContext,
+  initialPassword: string,
+): { row: BoxRenderable; input: InputRenderable } {
   const row = new BoxRenderable(ctx, {
     id: 'login-password-row',
     flexDirection: 'row',
@@ -180,36 +176,19 @@ function buildPasswordSection(ctx: RenderContext): PasswordSection {
     }),
   );
 
-  const box = new BoxRenderable(ctx, {
-    id: 'login-password-box',
+  const input = new InputRenderable(ctx, {
+    id: 'login-password-input',
+    value: initialPassword,
     width: 36,
-    height: 1,
+    textColor: COLOR_DEFAULT_FG,
     backgroundColor: COLOR_TAB_INACTIVE_BG,
-    paddingLeft: 1,
-    paddingRight: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
+    focusedBackgroundColor: COLOR_TAB_INACTIVE_BG,
+    cursorColor: COLOR_TAB_ACTIVE_BG,
   });
 
-  const text = new TextRenderable(ctx, {
-    id: 'login-password-text',
-    content: '',
-    fg: COLOR_DEFAULT_FG,
-  });
+  row.add(input);
 
-  const cursor = new TextRenderable(ctx, {
-    id: 'login-password-cursor',
-    content: ' ',
-    fg: COLOR_BG,
-    bg: COLOR_AXIS,
-  });
-  cursor.visible = false;
-
-  box.add(text);
-  box.add(cursor);
-  row.add(box);
-
-  return { row, box, text, cursor };
+  return { row, input };
 }
 
 // ─── Factory ──────────────────────────────────────────────────────────────────
@@ -219,7 +198,6 @@ export function createLoginScreen(
   options: LoginScreenOptions,
 ): LoginScreenComponent {
   let currentFocus: FocusField = 'server';
-  let passwordValue = options.initialPassword ?? '';
   let isLoggingIn = false;
 
   // ─── Build UI sections ──────────────────────────────────────────────────────
@@ -258,14 +236,10 @@ export function createLoginScreen(
     options.initialEmail ?? '',
   );
 
-  const {
-    row: passwordRow,
-    box: passwordBox,
-    text: passwordText,
-    cursor: passwordCursor,
-  } = buildPasswordSection(ctx);
-
-  passwordText.content = '*'.repeat(passwordValue.length);
+  const { row: passwordRow, input: passwordInput } = buildPasswordSection(
+    ctx,
+    options.initialPassword ?? '',
+  );
 
   const statusText = new TextRenderable(ctx, {
     id: 'login-status',
@@ -283,15 +257,10 @@ export function createLoginScreen(
 
   // ─── Focus helpers ──────────────────────────────────────────────────────────
 
-  function setPasswordFocus(focused: boolean): void {
-    passwordBox.borderColor = focused ? COLOR_TAB_ACTIVE_BG : COLOR_AXIS;
-    passwordCursor.visible = focused;
-  }
-
   function applyFocus(field: FocusField): void {
     serverSelect.blur();
     emailInput.blur();
-    setPasswordFocus(false);
+    passwordInput.blur();
 
     currentFocus = field;
 
@@ -300,7 +269,7 @@ export function createLoginScreen(
     } else if (field === 'email') {
       emailInput.focus();
     } else {
-      setPasswordFocus(true);
+      passwordInput.focus();
     }
   }
 
@@ -330,7 +299,8 @@ export function createLoginScreen(
       setStatus('Email is required', true);
       return;
     }
-    if (!passwordValue) {
+    const password = passwordInput.value;
+    if (!password) {
       applyFocus('password');
       setStatus('Password is required', true);
       return;
@@ -343,7 +313,7 @@ export function createLoginScreen(
       serverSelect.getSelectedIndex() === 1 ? SERVERS.EU : SERVERS.US;
 
     try {
-      await options.onLogin(email, passwordValue, server);
+      await options.onLogin(email, password, server);
     } catch (err) {
       isLoggingIn = false;
       const message = err instanceof Error ? err.message : 'Login failed';
@@ -353,11 +323,7 @@ export function createLoginScreen(
 
   // ─── Keyboard handler ────────────────────────────────────────────────────────
 
-  function onKeyPress(key: {
-    name: string;
-    shift: boolean;
-    sequence: string;
-  }): void {
+  function onKeyPress(key: { name: string; shift: boolean }): void {
     if (isLoggingIn) {
       return;
     }
@@ -365,21 +331,6 @@ export function createLoginScreen(
     if (key.name === 'tab') {
       advanceFocus(key.shift ? -1 : 1);
       return;
-    }
-
-    if (currentFocus === 'password') {
-      if (key.name === 'enter' || key.name === 'return') {
-        void submit();
-      } else if (key.name === 'backspace') {
-        passwordValue = passwordValue.slice(0, -1);
-        passwordText.content = '*'.repeat(passwordValue.length);
-      } else if (
-        key.sequence.length === 1 &&
-        key.sequence.charCodeAt(0) >= 32
-      ) {
-        passwordValue += key.sequence;
-        passwordText.content = '*'.repeat(passwordValue.length);
-      }
     }
   }
 
@@ -389,6 +340,9 @@ export function createLoginScreen(
 
   emailInput.on(InputRenderableEvents.ENTER, () => {
     advanceFocus(1);
+  });
+  passwordInput.on(InputRenderableEvents.ENTER, () => {
+    void submit();
   });
 
   ctx.keyInput.on('keypress', onKeyPress);
