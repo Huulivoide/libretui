@@ -28,23 +28,6 @@ function getClient(): LibreLinkClient {
   return client;
 }
 
-/** Fetch the latest single glucose reading */
-export async function read(): Promise<GlucoseReading> {
-  return getClient().read();
-}
-
-/** Fetch historical graph data */
-export async function history(): Promise<Array<GlucoseReading>> {
-  return getClient().history();
-}
-
-/** Stream readings at the given interval (default 90 s) */
-export function stream(
-  intervalMs?: number,
-): AsyncGenerator<GlucoseReading, void, unknown> {
-  return getClient().stream(intervalMs);
-}
-
 export function logout(): void {
   client = null;
 }
