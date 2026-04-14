@@ -33,7 +33,13 @@ const NAV_SCREENS: ReadonlyArray<Screen> = [
 
 // ─── Bootstrap ───────────────────────────────────────────────────────────────
 
-const renderer = await createCliRenderer({ exitOnCtrlC: true });
+const renderer = await createCliRenderer({
+  exitOnCtrlC: true,
+  onDestroy: () => {
+    DataPoller.stop();
+    LibreService.logout();
+  }
+});
 
 let settings = await loadSettings();
 const savedCreds = await loadCredentials();
