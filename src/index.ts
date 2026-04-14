@@ -33,12 +33,15 @@ const NAV_SCREENS: ReadonlyArray<Screen> = [
 
 // ─── Bootstrap ───────────────────────────────────────────────────────────────
 
+// Needs https://github.com/oven-sh/bun/pull/26697
+process.title = 'LibreTUI';
+
 const renderer = await createCliRenderer({
   exitOnCtrlC: true,
   onDestroy: () => {
     DataPoller.stop();
     LibreService.logout();
-  }
+  },
 });
 
 let settings = await loadSettings();
