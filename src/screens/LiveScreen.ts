@@ -1,13 +1,19 @@
 import {
+  ASCIIFontRenderable,
   BoxRenderable,
   TextRenderable,
   type RenderContext,
 } from '@opentui/core';
 import { type GlucoseReading } from 'libre-link-unofficial-api';
-import { type Settings } from '../state/AppState.js';
-import { createTrendArrow } from '../components/TrendArrow.js';
+import { Unit, type Settings } from '../state/AppState.js';
+import { TrendArrowFont } from '../components/TrendArrowFont.js';
 import DataPoller from '../services/DataPoller.js';
-import { COLOR_AXIS, COLOR_MEASUREMENT_RED } from '../components/theme.js';
+import {
+  COLOR_AXIS,
+  COLOR_DEFAULT_FG,
+  COLOR_MEASUREMENT_RED,
+  rgbaForMeasurement,
+} from '../components/theme.js';
 
 // ─── Types ──────────────────────────────────────────────────────────────────────────────
 
@@ -24,7 +30,9 @@ export type LiveScreenComponent = {
 
 function buildContent(ctx: RenderContext): {
   root: BoxRenderable;
-  trendArrow: ReturnType<typeof createTrendArrow>;
+  arrowText: TextRenderable;
+  bgValue: ASCIIFontRenderable;
+  unitText: TextRenderable;
   lastUpdatedText: TextRenderable;
   errorText: TextRenderable;
 } {
@@ -37,7 +45,35 @@ function buildContent(ctx: RenderContext): {
     gap: 1,
   });
 
-  const trendArrow = createTrendArrow(ctx);
+  // Row: braille arrow + pallet font BG value side by side
+  const readingRow = new BoxRenderable(ctx, {
+    id: 'live-reading-row',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
+  });
+
+  const arrowText = new TextRenderable(ctx, {
+    id: 'live-trend-arrow',
+    content: TrendArrowFont[3], // Flat as placeholder
+    fg: COLOR_DEFAULT_FG,
+  });
+
+  const bgValue = new ASCIIFontRenderable(ctx, {
+    id: 'live-bg-value',
+    text: '---',
+    font: 'pallet',
+    color: COLOR_DEFAULT_FG,
+  });
+
+  readingRow.add(arrowText);
+  readingRow.add(bgValue);
+
+  const unitText = new TextRenderable(ctx, {
+    id: 'live-unit',
+    content: '',
+    fg: COLOR_AXIS,
+  });
 
   const lastUpdatedText = new TextRenderable(ctx, {
     id: 'live-last-updated',
@@ -52,11 +88,12 @@ function buildContent(ctx: RenderContext): {
   });
   errorText.visible = false;
 
-  root.add(trendArrow.root);
+  root.add(readingRow);
+  root.add(unitText);
   root.add(lastUpdatedText);
   root.add(errorText);
 
-  return { root, trendArrow, lastUpdatedText, errorText };
+  return { root, arrowText, bgValue, unitText, lastUpdatedText, errorText };
 }
 
 // ─── Factory ─────────────────────────────────────────────────────────────────────────────
@@ -67,7 +104,7 @@ export function createLiveScreen(
 ): LiveScreenComponent {
   // ─── Build UI ───────────────────────────────────────────────────────────────────────────
 
-  const { root, trendArrow, lastUpdatedText, errorText } = buildContent(ctx);
+  const { root, arrowText, bgValue, unitText, lastUpdatedText, errorText } = buildContent(ctx);
 
   // ─── Helpers ────────────────────────────────────────────────────────────────────────────
 
@@ -76,8 +113,17 @@ export function createLiveScreen(
     if (!latest) {
       return;
     }
+    const color = rgbaForMeasurement(latest.measurementColor);
+    const displayValue =
+      options.settings.unit === Unit.MmolL ? latest.mmol : String(latest.mgDl);
+    const unitLabel = options.settings.unit === Unit.MmolL ? 'mmol/L' : 'mg/dL';
+
     errorText.visible = false;
-    trendArrow.update(latest, options.settings.unit);
+    arrowText.content = TrendArrowFont[latest.trend];
+    arrowText.fg = color;
+    bgValue.text = displayValue;
+    bgValue.color = color;
+    unitText.content = unitLabel;
     lastUpdatedText.content = `Updated ${latest.timestamp.toLocaleTimeString()}`;
   }
 
