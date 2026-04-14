@@ -55,19 +55,19 @@ function buildContent(ctx: RenderContext): {
 
   const arrowText = new TextRenderable(ctx, {
     id: 'live-trend-arrow',
-    content: TrendArrowFont[3], // Flat as placeholder
+    content: TrendArrowFont[0], // NotComputable as placeholder
     fg: COLOR_DEFAULT_FG,
   });
 
   const bgValue = new ASCIIFontRenderable(ctx, {
     id: 'live-bg-value',
-    text: '---',
+    text: '?.?',
     font: 'pallet',
     color: COLOR_DEFAULT_FG,
   });
 
-  readingRow.add(arrowText);
   readingRow.add(bgValue);
+  readingRow.add(arrowText);
 
   const unitText = new TextRenderable(ctx, {
     id: 'live-unit',

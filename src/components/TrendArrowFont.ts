@@ -1,7 +1,7 @@
-import { Trend } from 'libre-link-unofficial-api';
+import { type Trend } from 'libre-link-unofficial-api';
 
 export const TrendArrowFont: Readonly<Record<Trend, string>> = {
-  [Trend.NotComputable]:
+  [0]:
     '⠀⢀⣴⡶⠿⠿⠿⠿⣶⣦⣀⠀\n' +
     '⠀⠿⠏⠀⠀⠀⠀⠀⠀⢹⣿⠀\n' +
     '⠀⠀⠀⠀⠀⠀⢀⣠⣴⠿⠋⠀\n' +
@@ -9,7 +9,7 @@ export const TrendArrowFont: Readonly<Record<Trend, string>> = {
     '⠀⠀⠀⠀⠀⠘⠛⠃⠀⠀⠀⠀\n' +
     '⠀⠀⠀⠀⠀⢸⣿⡇⠀⠀⠀⠀',
 
-  [Trend.SingleUp]:
+  [1]:
     '⠀⠀⠀⣠⣴⣿⣿⣦⣄⠀⠀⠀\n' +
     '⠀⢀⣴⣿⣿⣿⣿⣿⣿⣦⡀⠀\n' +
     '⠴⠿⠿⠿⢿⣿⣿⡿⠿⠿⠿⠦\n' +
@@ -17,7 +17,7 @@ export const TrendArrowFont: Readonly<Record<Trend, string>> = {
     '⠀⠀⠀⠀⢸⣿⣿⡇⠀⠀⠀⠀\n' +
     '⠀⠀⠀⠀⢸⣿⣿⡇⠀⠀⠀⠀',
 
-  [Trend.FortyFiveUp]:
+  [2]:
     '⠀⠀⠀⠀⠀⠙⢿⣿⣿⣿⣿⣿\n' +
     '⠀⠀⠀⠀⠀⠀⢀⣽⣿⣿⣿⣿\n' +
     '⠀⠀⠀⠀⢀⣴⣿⣿⠟⠙⢿⣿\n' +
@@ -25,7 +25,7 @@ export const TrendArrowFont: Readonly<Record<Trend, string>> = {
     '⢀⣴⣿⣿⠟⠁⠀⠀⠀⠀⠀⠀\n' +
     '⣿⣿⠟⠁⠀⠀⠀⠀⠀⠀⠀⠀',
 
-  [Trend.Flat]:
+  [3]:
     '⠀⠀⠀⠀⠀⣿⣦⡀⠀⠀⠀⠀\n' +
     '⠀⠀⠀⠀⠀⣿⣿⣿⣦⡀⠀⠀\n' +
     '⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣦⣀\n' +
@@ -33,7 +33,7 @@ export const TrendArrowFont: Readonly<Record<Trend, string>> = {
     '⠀⠀⠀⠀⠀⣿⣿⣿⠟⠁⠀⠀\n' +
     '⠀⠀⠀⠀⠀⣿⠟⠁⠀⠀⠀⠀',
 
-  [Trend.FortyFiveDown]:
+  [4]:
     '⣿⣿⣦⡀⠀⠀⠀⠀⠀⠀⠀⠀\n' +
     '⠈⠻⣿⣿⣦⡀⠀⠀⠀⠀⠀⠀\n' +
     '⠀⠀⠈⠻⣿⣿⣦⡀⠀⠀⠀⣠\n' +
@@ -41,7 +41,7 @@ export const TrendArrowFont: Readonly<Record<Trend, string>> = {
     '⠀⠀⠀⠀⠀⠀⠈⣻⣿⣿⣿⣿\n' +
     '⠀⠀⠀⠀⠀⣠⣾⣿⣿⣿⣿⣿',
 
-  [Trend.SingleDown]:
+  [5]:
     '⠀⠀⠀⠀⢸⣿⣿⡇⠀⠀⠀⠀\n' +
     '⠀⠀⠀⠀⢸⣿⣿⡇⠀⠀⠀⠀\n' +
     '⠀⠀⠀⠀⢸⣿⣿⡇⠀⠀⠀⠀\n' +
