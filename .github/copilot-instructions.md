@@ -36,13 +36,14 @@ src/
   state/
     AppState.ts         # Shared enums and types: Screen, Unit, Server, Settings
   services/
-    LibreService.ts     # Abbott API: login, read, history, stream, logout
+    LibreService.ts     # Abbott API: login, fetchReadings, logout
+    DataPoller.ts       # Shared polling singleton: start/stop/on/off events
     SettingsStore.ts    # Persist settings to ~/.config/libretui/settings.json
     CredentialStore.ts  # Persist credentials via envsec SDK
   screens/
     LoginScreen.ts      # Server selection, email, password input, login button; onLogin callback
-    LiveScreen.ts       # Real-time BG reading via async generator stream
-    GraphScreen.ts      # Historical BG graph; resize-aware
+    LiveScreen.ts       # Live BG reading; subscribes to DataPoller 'data' events
+    GraphScreen.ts      # Historical BG graph; subscribes to DataPoller, resize-aware
     SettingsScreen.ts   # Unit (mg/dL / mmol/L) and alert thresholds
   components/
     NavBar.ts           # Top navigation bar shared by Live, Graph, Settings
@@ -126,13 +127,26 @@ type ButtonOptions = {
 };
 ```
 
+### DataPoller Service
+
+`src/services/DataPoller.ts` is a **module-level singleton** that polls the Abbott API every 60 s and emits typed events to all subscribers.
+
+- `start()` — begins polling immediately and at every 60 s interval.
+- `stop()` — clears the interval; called on logout.
+- `on('data', handler)` / `off('data', handler)` — subscribe to successful poll results (`ReadonlyArray<GlucoseReading>`).
+- `on('error', handler)` / `off('error', handler)` — subscribe to poll errors (`string` message).
+- Errors do **not** stop polling — the poller retries on the next tick.
+- `index.ts` calls `DataPoller.start()` after successful login and `DataPoller.stop()` on logout.
+- Live and Graph screens subscribe in their factory and unsubscribe in `destroy()`.
+- Internally calls `LibreService.fetchReadings()` which merges `graphData` + `connection.glucoseItem` (only if `glucoseItem` timestamp is strictly later than the last `graphData` entry).
+
 ### BgGraph Sizing
 
 `BgGraph` is a `FrameBufferRenderable` with a fixed pixel size. `GraphScreen` listens to `ctx.on('resize')` and rebuilds the graph with the new terminal dimensions.
 
 ### Streaming
 
-`LiveScreen` consumes `LibreService.stream()`, an async generator. `destroy()` calls `generator.return()` to terminate the stream.
+`DataPoller` replaces the old per-screen streaming/fetching. `LiveScreen` shows the last item from the polled array; `GraphScreen` renders the full array as a graph.
 
 ## Code Style Conventions
 
