@@ -10,7 +10,7 @@ import {
   type TrendArrowComponent,
 } from '../components/TrendArrow.js';
 import { createBgGraph, type BgGraphComponent } from '../components/BgGraph.js';
-import * as DataPoller from '../services/DataPoller.js';
+import DataPoller from '../services/DataPoller.js';
 import {
   COLOR_BG,
   COLOR_AXIS,

@@ -7,64 +7,61 @@ import * as LibreService from './LibreService.js';
 type DataListener = (readings: ReadonlyArray<GlucoseReading>) => void;
 type ErrorListener = (message: string) => void;
 
-// ─── State ────────────────────────────────────────────────────────────────────
-
-const emitter = new EventEmitter();
-let timer: ReturnType<typeof setInterval> | null = null;
-let latestReadings: ReadonlyArray<GlucoseReading> | null = null;
-
-// ─── Internal ────────────────────────────────────────────────────────────────
-
-async function poll(): Promise<void> {
-  try {
-    const readings = await LibreService.fetchReadings();
-    latestReadings = readings;
-    emitter.emit('data', readings);
-  } catch (err) {
-    const message = err instanceof Error ? err.message : 'Poll error';
-    emitter.emit('error', message);
-  }
-}
-
-// ─── Public API ───────────────────────────────────────────────────────────────
+// ─── Class ────────────────────────────────────────────────────────────────────
 
 const DEFAULT_INTERVAL_MS = 60_000;
 
-export function start(intervalMs: number = DEFAULT_INTERVAL_MS): void {
-  if (timer !== null) {
-    return;
+class DataPoller extends EventEmitter {
+  #timer: ReturnType<typeof setInterval> | null = null;
+  #latestReadings: ReadonlyArray<GlucoseReading> | null = null;
+
+  start(intervalMs: number = DEFAULT_INTERVAL_MS): void {
+    if (this.#timer !== null) {
+      return;
+    }
+    void this.#poll();
+    this.#timer = setInterval(() => {
+      void this.#poll();
+    }, intervalMs);
   }
-  void poll();
-  timer = setInterval(() => {
-    void poll();
-  }, intervalMs);
+
+  stop(): void {
+    if (this.#timer !== null) {
+      clearInterval(this.#timer);
+      this.#timer = null;
+    }
+    this.#latestReadings = null;
+  }
+
+  on(event: 'data', listener: DataListener): this;
+  on(event: 'error', listener: ErrorListener): this;
+  on(event: string, listener: DataListener | ErrorListener): this {
+    super.on(event, listener);
+    if (event === 'data' && this.#latestReadings !== null) {
+      (listener as DataListener)(this.#latestReadings);
+    }
+    return this;
+  }
+
+  off(event: 'data', listener: DataListener): this;
+  off(event: 'error', listener: ErrorListener): this;
+  off(event: string, listener: DataListener | ErrorListener): this {
+    super.off(event, listener);
+    return this;
+  }
+
+  async #poll(): Promise<void> {
+    try {
+      const readings = await LibreService.fetchReadings();
+      this.#latestReadings = readings;
+      this.emit('data', readings);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Poll error';
+      this.emit('error', message);
+    }
+  }
 }
 
-export function stop(): void {
-  if (timer !== null) {
-    clearInterval(timer);
-    timer = null;
-  }
-  latestReadings = null;
-}
+// ─── Singleton ────────────────────────────────────────────────────────────────
 
-export function on(event: 'data', listener: DataListener): void;
-export function on(event: 'error', listener: ErrorListener): void;
-export function on(
-  event: 'data' | 'error',
-  listener: DataListener | ErrorListener,
-): void {
-  emitter.on(event, listener);
-  if (event === 'data' && latestReadings !== null) {
-    (listener as DataListener)(latestReadings);
-  }
-}
-
-export function off(event: 'data', listener: DataListener): void;
-export function off(event: 'error', listener: ErrorListener): void;
-export function off(
-  event: 'data' | 'error',
-  listener: DataListener | ErrorListener,
-): void {
-  emitter.off(event, listener);
-}
+export default new DataPoller();
