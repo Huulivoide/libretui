@@ -10,7 +10,7 @@ import {
   type TrendArrowComponent,
 } from '../components/TrendArrow.js';
 import { createBgGraph, type BgGraphComponent } from '../components/BgGraph.js';
-import * as LibreService from '../services/LibreService.js';
+import * as DataPoller from '../services/DataPoller.js';
 import {
   COLOR_BG,
   COLOR_AXIS,
@@ -84,7 +84,6 @@ export function createGraphScreen(
 ): GraphScreenComponent {
   let currentGraph: BgGraphComponent | null = null;
   let latestReadings: ReadonlyArray<GlucoseReading> = [];
-  let stopped = false;
 
   // ─── Build UI ───────────────────────────────────────────────────────────────
 
@@ -140,29 +139,14 @@ export function createGraphScreen(
     currentGraph?.update(readings, options.settings);
   }
 
-  function onError(err: unknown): void {
-    const message = err instanceof Error ? err.message : 'Stream error';
+  function onError(message: string): void {
     errorText.content = message;
     errorText.visible = true;
     lastUpdatedText.content = 'Retrying…';
   }
 
-  // ─── Data fetching ──────────────────────────────────────────────────────────
-
-  async function fetchHistory(): Promise<void> {
-    try {
-      const readings = await LibreService.history();
-      if (!stopped) {
-        onReadings(readings);
-      }
-    } catch (err) {
-      if (!stopped) {
-        onError(err);
-      }
-    }
-  }
-
-  void fetchHistory();
+  DataPoller.on('data', onReadings);
+  DataPoller.on('error', onError);
 
   // ─── Resize ──────────────────────────────────────────────────────────────────
 
@@ -175,8 +159,9 @@ export function createGraphScreen(
   // ─── Destroy ─────────────────────────────────────────────────────────────────
 
   function destroy(): void {
-    stopped = true;
     ctx.off('resize', onResize);
+    DataPoller.off('data', onReadings);
+    DataPoller.off('error', onError);
   }
 
   return { root, destroy };

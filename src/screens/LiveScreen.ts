@@ -6,10 +6,10 @@ import {
 import { type GlucoseReading } from 'libre-link-unofficial-api';
 import { type Settings } from '../state/AppState.js';
 import { createTrendArrow } from '../components/TrendArrow.js';
-import * as LibreService from '../services/LibreService.js';
+import * as DataPoller from '../services/DataPoller.js';
 import { COLOR_AXIS, COLOR_MEASUREMENT_RED } from '../components/theme.js';
 
-// ─── Types ────────────────────────────────────────────────────────────────────
+// ─── Types ──────────────────────────────────────────────────────────────────────────────
 
 export type LiveScreenOptions = {
   readonly settings: Settings;
@@ -20,7 +20,7 @@ export type LiveScreenComponent = {
   readonly destroy: () => void;
 };
 
-// ─── Section builders ────────────────────────────────────────────────────────
+// ─── Section builders ───────────────────────────────────────────────────────────────────
 
 function buildContent(ctx: RenderContext): {
   root: BoxRenderable;
@@ -59,59 +59,42 @@ function buildContent(ctx: RenderContext): {
   return { root, trendArrow, lastUpdatedText, errorText };
 }
 
-// ─── Factory ─────────────────────────────────────────────────────────────────
+// ─── Factory ─────────────────────────────────────────────────────────────────────────────
 
 export function createLiveScreen(
   ctx: RenderContext,
   options: LiveScreenOptions,
 ): LiveScreenComponent {
-  let generator: AsyncGenerator<GlucoseReading, void, unknown> | null = null;
-  let stopped = false;
-
-  // ─── Build UI ───────────────────────────────────────────────────────────────
+  // ─── Build UI ───────────────────────────────────────────────────────────────────────────
 
   const { root, trendArrow, lastUpdatedText, errorText } = buildContent(ctx);
 
-  // ─── Helpers ────────────────────────────────────────────────────────────────
+  // ─── Helpers ────────────────────────────────────────────────────────────────────────────
 
-  function onReading(reading: GlucoseReading): void {
+  function onData(readings: ReadonlyArray<GlucoseReading>): void {
+    const latest = readings.at(-1);
+    if (!latest) {
+      return;
+    }
     errorText.visible = false;
-    trendArrow.update(reading, options.settings.unit);
-    lastUpdatedText.content = `Updated ${reading.timestamp.toLocaleTimeString()}`;
+    trendArrow.update(latest, options.settings.unit);
+    lastUpdatedText.content = `Updated ${latest.timestamp.toLocaleTimeString()}`;
   }
 
-  function onError(err: unknown): void {
-    const message = err instanceof Error ? err.message : 'Stream error';
+  function onError(message: string): void {
     errorText.content = message;
     errorText.visible = true;
     lastUpdatedText.content = 'Retrying…';
   }
 
-  // ─── Streaming ──────────────────────────────────────────────────────────────
+  DataPoller.on('data', onData);
+  DataPoller.on('error', onError);
 
-  async function startStream(): Promise<void> {
-    try {
-      generator = LibreService.stream();
-      for await (const reading of generator) {
-        if (stopped) {
-          break;
-        }
-        onReading(reading);
-      }
-    } catch (err) {
-      if (!stopped) {
-        onError(err);
-      }
-    }
-  }
-
-  void startStream();
-
-  // ─── Destroy ─────────────────────────────────────────────────────────────────
+  // ─── Destroy ─────────────────────────────────────────────────────────────────────────────
 
   function destroy(): void {
-    stopped = true;
-    void generator?.return(undefined);
+    DataPoller.off('data', onData);
+    DataPoller.off('error', onError);
   }
 
   return { root, destroy };

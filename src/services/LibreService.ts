@@ -1,7 +1,4 @@
-import {
-  LibreLinkClient,
-  type GlucoseReading,
-} from 'libre-link-unofficial-api';
+import { LibreLinkClient, GlucoseReading } from 'libre-link-unofficial-api';
 import { type Server } from '../state/AppState.js';
 
 const lluVersion = '4.17.0';
@@ -50,4 +47,23 @@ export function stream(
 
 export function logout(): void {
   client = null;
+}
+
+/**
+ * Fetch a single API response and return merged historical + latest readings.
+ * The latest glucoseItem is appended to the graphData array only if its
+ * timestamp is strictly newer than the last historical reading.
+ */
+export async function fetchReadings(): Promise<ReadonlyArray<GlucoseReading>> {
+  const response = await getClient().fetchReading();
+  const connection = response.data.connection;
+  const readings = response.data.graphData.map(
+    (item) => new GlucoseReading(item, connection),
+  );
+  const latest = new GlucoseReading(connection.glucoseItem, connection);
+  const lastHistorical = readings.at(-1);
+  if (!lastHistorical || latest.timestamp > lastHistorical.timestamp) {
+    return [...readings, latest];
+  }
+  return readings;
 }

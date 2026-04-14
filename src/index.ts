@@ -7,6 +7,7 @@ import {
   clearCredentials,
 } from './services/CredentialStore.js';
 import * as LibreService from './services/LibreService.js';
+import * as DataPoller from './services/DataPoller.js';
 import { createAppLayout } from './components/AppLayout.js';
 import { createLoginScreen } from './screens/LoginScreen.js';
 import { createAutoLoginScreen } from './screens/AutoLoginScreen.js';
@@ -140,6 +141,7 @@ async function handleLogin(
   settings = { ...settings, server };
   await saveSettings(settings);
   navigateTo(Screen.Live);
+  DataPoller.start();
 }
 
 async function handleSaveSettings(newSettings: Settings): Promise<void> {
@@ -148,6 +150,7 @@ async function handleSaveSettings(newSettings: Settings): Promise<void> {
 }
 
 async function handleLogout(): Promise<void> {
+  DataPoller.stop();
   await clearCredentials();
   LibreService.logout();
   mount(Screen.Login, createLoginScreen(renderer, { onLogin: handleLogin }));
@@ -177,6 +180,7 @@ if (savedCreds) {
       server: settings.server,
       onSuccess: () => {
         navigateTo(Screen.Live);
+        DataPoller.start();
       },
       onFailure: (error) => {
         mountLoginScreen(error);
