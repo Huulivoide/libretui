@@ -160,6 +160,10 @@ These are enforced by ESLint where possible and must be followed everywhere:
 - **String enum values match key names** — e.g. `Login = 'Login'`, not `Login = 'login'`.
 - **Use library getters for BG values** — `GlucoseReading.value` (mg/dL) and `GlucoseReading.mmol` (mmol/L) are available directly; don't write custom conversion utilities.
 
+## Git Workflow
+
+**Never commit directly to `main`.** All changes must be made on a feature branch and submitted via a pull request. This applies to every change, no matter how small.
+
 ## PR Convention
 
 Every PR description must include a **"Prompts used"** section briefly summarising the user prompts that drove the work in that PR.
