@@ -6,7 +6,7 @@ import {
 import { type GlucoseReading } from 'libre-link-unofficial-api';
 import { type Settings } from '../state/AppState.js';
 import { createTrendArrow } from '../components/TrendArrow.js';
-import * as DataPoller from '../services/DataPoller.js';
+import DataPoller from '../services/DataPoller.js';
 import { COLOR_AXIS, COLOR_MEASUREMENT_RED } from '../components/theme.js';
 
 // ─── Types ──────────────────────────────────────────────────────────────────────────────

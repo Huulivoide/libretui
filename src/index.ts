@@ -7,7 +7,7 @@ import {
   clearCredentials,
 } from './services/CredentialStore.js';
 import * as LibreService from './services/LibreService.js';
-import * as DataPoller from './services/DataPoller.js';
+import DataPoller from './services/DataPoller.js';
 import { createAppLayout } from './components/AppLayout.js';
 import { createLoginScreen } from './screens/LoginScreen.js';
 import { createAutoLoginScreen } from './screens/AutoLoginScreen.js';
