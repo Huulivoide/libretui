@@ -38,12 +38,10 @@ On first launch you will be prompted to select your LibreView server region, ent
 
 ### Key bindings
 
-| Key | Action |
-|-----|--------|
-| `Tab` / `Shift+Tab` | Cycle between Live and Graph screens |
-| `s` | Open Settings |
-| `Esc` | Close Settings, return to Live |
-| `Ctrl+C` / `q` | Quit |
+| Key                 | Action                                         |
+|---------------------|------------------------------------------------|
+| `Tab` / `Shift+Tab` | Cycle between Live, Graph and Settings screens |
+| `Ctrl+C`            | Quit                                           |
 
 ## Development
 

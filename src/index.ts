@@ -106,24 +106,18 @@ function navigateTo(screen: Screen): void {
   }
 }
 
-// Tab/Shift+Tab cycles between Live and Graph (not Login or Settings — they use Tab for field focus).
-// Escape from Settings returns to Live.
+// Tab/Shift+Tab cycles between Live, Graph and Settings.
 function onGlobalKeyPress(key: KeyEvent): void {
-  if (activeScreen === Screen.Settings && key.name === 'escape') {
-    navigateTo(Screen.Live);
+  if (key.name !== 'tab' || activeScreen === Screen.Login) {
     return;
   }
-  if (key.name !== 'tab') {
-    return;
-  }
-  if (activeScreen === Screen.Login || activeScreen === Screen.Settings) {
-    return;
-  }
+
   const idx = NAV_SCREENS.indexOf(activeScreen);
   const next =
     NAV_SCREENS[
       (idx + (key.shift ? -1 : 1) + NAV_SCREENS.length) % NAV_SCREENS.length
     ];
+
   navigateTo(next);
 }
 
