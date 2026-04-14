@@ -104,7 +104,8 @@ export function createLiveScreen(
 ): LiveScreenComponent {
   // ─── Build UI ───────────────────────────────────────────────────────────────────────────
 
-  const { root, arrowText, bgValue, unitText, lastUpdatedText, errorText } = buildContent(ctx);
+  const { root, arrowText, bgValue, unitText, lastUpdatedText, errorText } =
+    buildContent(ctx);
 
   // ─── Helpers ────────────────────────────────────────────────────────────────────────────
 
