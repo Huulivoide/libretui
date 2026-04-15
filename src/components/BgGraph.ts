@@ -1,8 +1,4 @@
-import {
-  FrameBufferRenderable,
-  TextAttributes,
-  type RenderContext,
-} from '@opentui/core';
+import { FrameBufferRenderable, type RenderContext } from '@opentui/core';
 import { type GlucoseReading } from 'libre-link-unofficial-api';
 import { type Settings, Unit } from '../state/AppState.js';
 import {
@@ -12,7 +8,6 @@ import {
   COLOR_DIM,
   COLOR_LOW,
   COLOR_HIGH,
-  COLOR_DEFAULT_FG,
 } from './theme.js';
 
 // ─── Margin constants ─────────────────────────────────────────────────────────
@@ -30,6 +25,8 @@ const MIN_DISPLAY_LOW_MGDL = 50;
 const MIN_DISPLAY_HIGH_MGDL = 220;
 /** Padding above and below data/thresholds in mg/dL (≈ 0.5 mmol/L) */
 const PADDING_MGDL = 10;
+/** Grid lines double in spacing when the plot height is at or below this value */
+const SMALL_HEIGHT_THRESHOLD = 40;
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -77,6 +74,17 @@ type PlotBounds = {
 
 function drawAxes(fb: FrameBuffer, bounds: PlotBounds): void {
   const { plotW, axisRow } = bounds;
+  const rightCol = MARGIN_LEFT + plotW;
+  const topRow = MARGIN_TOP - 1; // row 0
+
+  // Top edge
+  fb.setCell(MARGIN_LEFT - 1, topRow, '┌', COLOR_AXIS, COLOR_BG);
+  for (let col = MARGIN_LEFT; col < rightCol; col++) {
+    fb.setCell(col, topRow, '─', COLOR_AXIS, COLOR_BG);
+  }
+  fb.setCell(rightCol, topRow, '┐', COLOR_AXIS, COLOR_BG);
+
+  // Left edge + bottom-left corner
   for (let row = MARGIN_TOP; row <= axisRow; row++) {
     fb.setCell(
       MARGIN_LEFT - 1,
@@ -86,24 +94,38 @@ function drawAxes(fb: FrameBuffer, bounds: PlotBounds): void {
       COLOR_BG,
     );
   }
-  for (let col = MARGIN_LEFT; col < MARGIN_LEFT + plotW; col++) {
+
+  // Bottom edge
+  for (let col = MARGIN_LEFT; col < rightCol; col++) {
     fb.setCell(col, axisRow, '─', COLOR_AXIS, COLOR_BG);
   }
+
+  // Right edge — grid/threshold lines overwrite with ┤ in their own color
+  for (let row = MARGIN_TOP; row < axisRow; row++) {
+    fb.setCell(rightCol, row, '│', COLOR_AXIS, COLOR_BG);
+  }
+  fb.setCell(rightCol, axisRow, '┘', COLOR_AXIS, COLOR_BG);
 }
 
 function drawGridLines(fb: FrameBuffer, bounds: PlotBounds, unit: Unit): void {
   const { plotW, plotH, valMin, valMax } = bounds;
-  // 18 mg/dL = exactly 1 mmol/L → clean mmol/L labels; 20 mg/dL for mg/dL mode
-  const step = unit === Unit.MmolL ? 18 : 20;
+  const rightCol = MARGIN_LEFT + plotW;
+
+  // Double the step on small screens to avoid crowded labels
+  const baseStep = unit === Unit.MmolL ? 18 : 20;
+  const step = plotH <= SMALL_HEIGHT_THRESHOLD ? baseStep * 2 : baseStep;
+
   const firstLine = Math.ceil(valMin / step) * step;
   for (let v = firstLine; v <= valMax; v += step) {
     const row = toYRow(v, valMin, valMax, plotH);
     if (row < MARGIN_TOP || row >= MARGIN_TOP + plotH) {
       continue;
     }
-    for (let col = MARGIN_LEFT; col < MARGIN_LEFT + plotW; col++) {
+    for (let col = MARGIN_LEFT; col < rightCol; col++) {
       fb.setCell(col, row, '─', COLOR_DIM, COLOR_BG);
     }
+    fb.setCell(rightCol, row, '┤', COLOR_DIM, COLOR_BG);
+
     const label = unit === Unit.MmolL ? (v / 18.0).toFixed(1) : String(v);
     fb.drawText(label.padStart(MARGIN_LEFT - 2), 0, row, COLOR_DIM, COLOR_BG);
     fb.setCell(MARGIN_LEFT - 1, row, '┼', COLOR_DIM, COLOR_BG);
@@ -117,12 +139,15 @@ function drawThresholdLines(
   unit: Unit,
 ): void {
   const { plotW, plotH, valMin, valMax } = bounds;
+  const rightCol = MARGIN_LEFT + plotW;
 
   const lowRow = toYRow(settings.lowThreshold, valMin, valMax, plotH);
   if (lowRow >= MARGIN_TOP && lowRow < MARGIN_TOP + plotH) {
-    for (let col = MARGIN_LEFT; col < MARGIN_LEFT + plotW; col++) {
+    for (let col = MARGIN_LEFT; col < rightCol; col++) {
       fb.setCell(col, lowRow, '─', COLOR_LOW, COLOR_BG);
     }
+    fb.setCell(rightCol, lowRow, '┤', COLOR_LOW, COLOR_BG);
+
     const lowLabel =
       unit === Unit.MmolL
         ? (settings.lowThreshold / 18.0).toFixed(1)
@@ -139,9 +164,11 @@ function drawThresholdLines(
 
   const highRow = toYRow(settings.highThreshold, valMin, valMax, plotH);
   if (highRow >= MARGIN_TOP && highRow < MARGIN_TOP + plotH) {
-    for (let col = MARGIN_LEFT; col < MARGIN_LEFT + plotW; col++) {
+    for (let col = MARGIN_LEFT; col < rightCol; col++) {
       fb.setCell(col, highRow, '─', COLOR_HIGH, COLOR_BG);
     }
+    fb.setCell(rightCol, highRow, '┤', COLOR_HIGH, COLOR_BG);
+
     const highLabel =
       unit === Unit.MmolL
         ? (settings.highThreshold / 18.0).toFixed(1)
