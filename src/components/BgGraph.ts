@@ -27,7 +27,7 @@ const MARGIN_BOTTOM = 2; // X-axis + time labels
 /** Minimum lower bound of the Y axis in mg/dL (≈ 3 mmol/L) */
 const MIN_DISPLAY_LOW_MGDL = 50;
 /** Minimum upper bound of the Y axis in mg/dL (≈ 12 mmol/L) */
-const MIN_DISPLAY_HIGH_MGDL = 210;
+const MIN_DISPLAY_HIGH_MGDL = 220;
 /** Padding above and below data/thresholds in mg/dL (≈ 0.5 mmol/L) */
 const PADDING_MGDL = 10;
 
