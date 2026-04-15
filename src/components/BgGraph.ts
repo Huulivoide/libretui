@@ -72,39 +72,32 @@ type PlotBounds = {
   readonly axisRow: number;
 };
 
-function drawAxes(fb: FrameBuffer, bounds: PlotBounds): void {
+function drawBorder(fb: FrameBuffer, bounds: PlotBounds): void {
   const { plotW, axisRow } = bounds;
+
   const rightCol = MARGIN_LEFT + plotW;
   const topRow = MARGIN_TOP - 1; // row 0
+  const bottomRow = axisRow;
 
-  // Top edge
+  // Left Top and Bottom corners
   fb.setCell(MARGIN_LEFT - 1, topRow, '┌', COLOR_AXIS, COLOR_BG);
+  fb.setCell(MARGIN_LEFT - 1, bottomRow, '└', COLOR_AXIS, COLOR_BG);
+
+  // Right Top and Bottom corners
+  fb.setCell(rightCol, topRow, '┐', COLOR_AXIS, COLOR_BG);
+  fb.setCell(rightCol, bottomRow, '┘', COLOR_AXIS, COLOR_BG);
+
+  // Top and Bottom edges
   for (let col = MARGIN_LEFT; col < rightCol; col++) {
     fb.setCell(col, topRow, '─', COLOR_AXIS, COLOR_BG);
-  }
-  fb.setCell(rightCol, topRow, '┐', COLOR_AXIS, COLOR_BG);
-
-  // Left edge + bottom-left corner
-  for (let row = MARGIN_TOP; row <= axisRow; row++) {
-    fb.setCell(
-      MARGIN_LEFT - 1,
-      row,
-      row === axisRow ? '└' : '│',
-      COLOR_AXIS,
-      COLOR_BG,
-    );
+    fb.setCell(col, bottomRow, '─', COLOR_AXIS, COLOR_BG);
   }
 
-  // Bottom edge
-  for (let col = MARGIN_LEFT; col < rightCol; col++) {
-    fb.setCell(col, axisRow, '─', COLOR_AXIS, COLOR_BG);
-  }
-
-  // Right edge — grid/threshold lines overwrite with ┤ in their own color
-  for (let row = MARGIN_TOP; row < axisRow; row++) {
+  // Left and Right edges
+  for (let row = MARGIN_TOP; row < bottomRow; row++) {
+    fb.setCell(MARGIN_LEFT - 1, row, '│', COLOR_AXIS, COLOR_BG);
     fb.setCell(rightCol, row, '│', COLOR_AXIS, COLOR_BG);
   }
-  fb.setCell(rightCol, axisRow, '┘', COLOR_AXIS, COLOR_BG);
 }
 
 function drawGridLines(fb: FrameBuffer, bounds: PlotBounds, unit: Unit): void {
@@ -311,7 +304,7 @@ function renderGraph(
     axisRow,
   };
 
-  drawAxes(fb, bounds);
+  drawBorder(fb, bounds);
   drawGridLines(fb, bounds, settings.unit);
   drawThresholdLines(fb, bounds, settings, settings.unit);
   drawDataLine(fb, readings, bounds);
