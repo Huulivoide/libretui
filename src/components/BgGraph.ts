@@ -243,29 +243,6 @@ function drawXAxisLabels(
   );
 }
 
-function drawCurrentValueLabel(
-  fb: FrameBuffer,
-  readings: ReadonlyArray<GlucoseReading>,
-  settings: Settings,
-  width: number,
-): void {
-  const lastReading = readings.at(-1);
-  if (!lastReading) {
-    return;
-  }
-  const currentLabel =
-    settings.unit === Unit.MmolL ? lastReading.mmol : String(lastReading.mgDl);
-  const labelX = Math.max(0, width - currentLabel.length - MARGIN_RIGHT);
-  fb.drawText(
-    currentLabel,
-    labelX,
-    0,
-    COLOR_DEFAULT_FG,
-    COLOR_BG,
-    TextAttributes.BOLD,
-  );
-}
-
 function renderGraph(
   fb: FrameBuffer,
   readings: ReadonlyArray<GlucoseReading>,
@@ -312,7 +289,6 @@ function renderGraph(
   drawThresholdLines(fb, bounds, settings, settings.unit);
   drawDataLine(fb, readings, bounds);
   drawXAxisLabels(fb, readings, bounds, height);
-  drawCurrentValueLabel(fb, readings, settings, width);
 }
 
 // ─── Public API ───────────────────────────────────────────────────────────────

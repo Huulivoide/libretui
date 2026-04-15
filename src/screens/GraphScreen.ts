@@ -49,7 +49,7 @@ function buildHeader(ctx: RenderContext): {
     height: HEADER_HEIGHT,
     alignItems: 'center',
     gap: 2,
-    paddingLeft: 1,
+    paddingLeft: 6,
     backgroundColor: COLOR_BG,
   });
 
