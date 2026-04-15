@@ -22,6 +22,15 @@ const MARGIN_RIGHT = 2;
 const MARGIN_TOP = 1; // breathing room at top
 const MARGIN_BOTTOM = 2; // X-axis + time labels
 
+// ─── Display range constants ──────────────────────────────────────────────────
+
+/** Minimum lower bound of the Y axis in mg/dL (≈ 3 mmol/L) */
+const MIN_DISPLAY_LOW_MGDL = 50;
+/** Minimum upper bound of the Y axis in mg/dL (≈ 12 mmol/L) */
+const MIN_DISPLAY_HIGH_MGDL = 210;
+/** Padding above and below data/thresholds in mg/dL (≈ 0.5 mmol/L) */
+const PADDING_MGDL = 10;
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function formatHhmm(d: Date): string {
@@ -82,18 +91,22 @@ function drawAxes(fb: FrameBuffer, bounds: PlotBounds): void {
   }
 }
 
-function drawYAxisTicks(fb: FrameBuffer, bounds: PlotBounds, unit: Unit): void {
-  const { plotH, valMin, valMax } = bounds;
-  const tickStep = 50;
-  const firstTick = Math.ceil(valMin / tickStep) * tickStep;
-  for (let v = firstTick; v <= valMax; v += tickStep) {
+function drawGridLines(fb: FrameBuffer, bounds: PlotBounds, unit: Unit): void {
+  const { plotW, plotH, valMin, valMax } = bounds;
+  // 18 mg/dL = exactly 1 mmol/L → clean mmol/L labels; 20 mg/dL for mg/dL mode
+  const step = unit === Unit.MmolL ? 18 : 20;
+  const firstLine = Math.ceil(valMin / step) * step;
+  for (let v = firstLine; v <= valMax; v += step) {
     const row = toYRow(v, valMin, valMax, plotH);
     if (row < MARGIN_TOP || row >= MARGIN_TOP + plotH) {
       continue;
     }
+    for (let col = MARGIN_LEFT; col < MARGIN_LEFT + plotW; col++) {
+      fb.setCell(col, row, '─', COLOR_DIM, COLOR_BG);
+    }
     const label = unit === Unit.MmolL ? (v / 18.0).toFixed(1) : String(v);
-    fb.drawText(label.padStart(MARGIN_LEFT - 2), 0, row, COLOR_AXIS, COLOR_BG);
-    fb.setCell(MARGIN_LEFT - 1, row, '┤', COLOR_AXIS, COLOR_BG);
+    fb.drawText(label.padStart(MARGIN_LEFT - 2), 0, row, COLOR_DIM, COLOR_BG);
+    fb.setCell(MARGIN_LEFT - 1, row, '┤', COLOR_DIM, COLOR_BG);
   }
 }
 
@@ -101,6 +114,7 @@ function drawThresholdLines(
   fb: FrameBuffer,
   bounds: PlotBounds,
   settings: Settings,
+  unit: Unit,
 ): void {
   const { plotW, plotH, valMin, valMax } = bounds;
 
@@ -111,6 +125,12 @@ function drawThresholdLines(
         fb.setCell(col, lowRow, '─', COLOR_LOW, COLOR_BG);
       }
     }
+    const lowLabel =
+      unit === Unit.MmolL
+        ? (settings.lowThreshold / 18.0).toFixed(1)
+        : String(settings.lowThreshold);
+    fb.drawText(lowLabel.padStart(MARGIN_LEFT - 2), 0, lowRow, COLOR_LOW, COLOR_BG);
+    fb.setCell(MARGIN_LEFT - 1, lowRow, '┤', COLOR_LOW, COLOR_BG);
   }
 
   const highRow = toYRow(settings.highThreshold, valMin, valMax, plotH);
@@ -120,6 +140,12 @@ function drawThresholdLines(
         fb.setCell(col, highRow, '─', COLOR_HIGH, COLOR_BG);
       }
     }
+    const highLabel =
+      unit === Unit.MmolL
+        ? (settings.highThreshold / 18.0).toFixed(1)
+        : String(settings.highThreshold);
+    fb.drawText(highLabel.padStart(MARGIN_LEFT - 2), 0, highRow, COLOR_HIGH, COLOR_BG);
+    fb.setCell(MARGIN_LEFT - 1, highRow, '┤', COLOR_HIGH, COLOR_BG);
   }
 }
 
@@ -255,14 +281,10 @@ function renderGraph(
   fb.clear(COLOR_BG);
 
   const rawValues = readings.map((r) => r.value);
-  const valMin = Math.max(
-    40,
-    Math.min(...rawValues, settings.lowThreshold) - 10,
-  );
-  const valMax = Math.min(
-    400,
-    Math.max(...rawValues, settings.highThreshold) + 10,
-  );
+  const dataLow = Math.min(...rawValues, settings.lowThreshold);
+  const dataHigh = Math.max(...rawValues, settings.highThreshold);
+  const valMin = Math.min(dataLow - PADDING_MGDL, MIN_DISPLAY_LOW_MGDL);
+  const valMax = Math.max(dataHigh + PADDING_MGDL, MIN_DISPLAY_HIGH_MGDL);
   const timeMin = firstReading.timestamp.getTime();
   const timeMax = lastReading.timestamp.getTime();
   const axisRow = MARGIN_TOP + plotH;
@@ -278,8 +300,8 @@ function renderGraph(
   };
 
   drawAxes(fb, bounds);
-  drawYAxisTicks(fb, bounds, settings.unit);
-  drawThresholdLines(fb, bounds, settings);
+  drawGridLines(fb, bounds, settings.unit);
+  drawThresholdLines(fb, bounds, settings, settings.unit);
   drawDataLine(fb, readings, bounds);
   drawXAxisLabels(fb, readings, bounds, height);
   drawCurrentValueLabel(fb, readings, settings, width);
