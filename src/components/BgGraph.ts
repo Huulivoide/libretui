@@ -121,9 +121,7 @@ function drawThresholdLines(
   const lowRow = toYRow(settings.lowThreshold, valMin, valMax, plotH);
   if (lowRow >= MARGIN_TOP && lowRow < MARGIN_TOP + plotH) {
     for (let col = MARGIN_LEFT; col < MARGIN_LEFT + plotW; col++) {
-      if ((col - MARGIN_LEFT) % 2 === 0) {
-        fb.setCell(col, lowRow, '─', COLOR_LOW, COLOR_BG);
-      }
+      fb.setCell(col, lowRow, '─', COLOR_LOW, COLOR_BG);
     }
     const lowLabel =
       unit === Unit.MmolL
@@ -136,9 +134,7 @@ function drawThresholdLines(
   const highRow = toYRow(settings.highThreshold, valMin, valMax, plotH);
   if (highRow >= MARGIN_TOP && highRow < MARGIN_TOP + plotH) {
     for (let col = MARGIN_LEFT; col < MARGIN_LEFT + plotW; col++) {
-      if ((col - MARGIN_LEFT) % 2 === 0) {
-        fb.setCell(col, highRow, '─', COLOR_HIGH, COLOR_BG);
-      }
+      fb.setCell(col, highRow, '─', COLOR_HIGH, COLOR_BG);
     }
     const highLabel =
       unit === Unit.MmolL
