@@ -106,7 +106,7 @@ function drawGridLines(fb: FrameBuffer, bounds: PlotBounds, unit: Unit): void {
     }
     const label = unit === Unit.MmolL ? (v / 18.0).toFixed(1) : String(v);
     fb.drawText(label.padStart(MARGIN_LEFT - 2), 0, row, COLOR_DIM, COLOR_BG);
-    fb.setCell(MARGIN_LEFT - 1, row, '┤', COLOR_DIM, COLOR_BG);
+    fb.setCell(MARGIN_LEFT - 1, row, '┼', COLOR_DIM, COLOR_BG);
   }
 }
 
@@ -127,8 +127,14 @@ function drawThresholdLines(
       unit === Unit.MmolL
         ? (settings.lowThreshold / 18.0).toFixed(1)
         : String(settings.lowThreshold);
-    fb.drawText(lowLabel.padStart(MARGIN_LEFT - 2), 0, lowRow, COLOR_LOW, COLOR_BG);
-    fb.setCell(MARGIN_LEFT - 1, lowRow, '┤', COLOR_LOW, COLOR_BG);
+    fb.drawText(
+      lowLabel.padStart(MARGIN_LEFT - 2),
+      0,
+      lowRow,
+      COLOR_LOW,
+      COLOR_BG,
+    );
+    fb.setCell(MARGIN_LEFT - 1, lowRow, '┼', COLOR_LOW, COLOR_BG);
   }
 
   const highRow = toYRow(settings.highThreshold, valMin, valMax, plotH);
@@ -140,8 +146,14 @@ function drawThresholdLines(
       unit === Unit.MmolL
         ? (settings.highThreshold / 18.0).toFixed(1)
         : String(settings.highThreshold);
-    fb.drawText(highLabel.padStart(MARGIN_LEFT - 2), 0, highRow, COLOR_HIGH, COLOR_BG);
-    fb.setCell(MARGIN_LEFT - 1, highRow, '┤', COLOR_HIGH, COLOR_BG);
+    fb.drawText(
+      highLabel.padStart(MARGIN_LEFT - 2),
+      0,
+      highRow,
+      COLOR_HIGH,
+      COLOR_BG,
+    );
+    fb.setCell(MARGIN_LEFT - 1, highRow, '┼', COLOR_HIGH, COLOR_BG);
   }
 }
 
