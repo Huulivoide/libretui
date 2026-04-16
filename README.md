@@ -2,7 +2,7 @@
 
 A terminal UI for visualising [Abbott FreeStyle Libre](https://www.freestyle.abbott/) continuous glucose monitor (CGM) data, right in your terminal.
 
-![libretui screenshot](./assets/screenshot.png?raw=true)
+![libretui screenshot](./assets/libretui.gif?raw=true)
 
 ## Features
 
